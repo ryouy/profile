@@ -137,10 +137,6 @@ export function Projects() {
   return (
     <section id="projects" className="py-16 sm:py-20">
       <SectionHeader eyebrow="<playground />" title="Project Playground" />
-      <div className="mb-8 max-w-3xl text-sm leading-7 text-muted">
-        Small apps, visual experiments, club tools, research notes, and prototypes. This is closer to a
-        playground than a polished gallery.
-      </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.18fr_0.82fr] lg:items-center">
         <div
@@ -232,7 +228,6 @@ export function Projects() {
               >
                 <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">{project.category}</span>
                 <span className="mt-2 block text-sm font-semibold leading-5 text-text">{project.title}</span>
-                <span className="mt-2 line-clamp-2 block text-xs leading-5 text-muted">{project.description}</span>
               </button>
             );
           })}

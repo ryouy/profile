@@ -6,7 +6,6 @@ const facts = [
   ["Affiliation", profile.affiliation],
   ["Location", profile.location],
   ["Work base", profile.workBase],
-  ["Handle", profile.username],
   ["Role", profile.role],
 ];
 
