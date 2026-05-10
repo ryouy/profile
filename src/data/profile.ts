@@ -11,6 +11,7 @@ export const profile = {
     "Data science",
     "Hardware / Robotics",
     "Art / Philosophy",
+    "Economics / Political Science",
     "Hiking",
     "Kendo",
   ],
