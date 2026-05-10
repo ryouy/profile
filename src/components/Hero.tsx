@@ -23,27 +23,34 @@ export function Hero() {
           Ryo / <span className="text-accent">ryouy</span>
         </h1>
         <p className="mt-6 text-xl font-medium text-text sm:text-2xl">
-          CS Student, Developer, and Data Science Explorer.
+          Hiker, Developer, and Data Science Explorer.
         </p>
         <p className="mt-5 max-w-2xl text-base leading-8 text-muted sm:text-lg">
-          Engineering playground for web apps, data visualization, research tooling, and interface
-          experiments built around small, useful ideas.
+          Engineering playground for web apps, data visualization, research tooling built around small, useful ideas.
         </p>
 
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
           <a
+            href="#projects"
+            className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-accent/60 bg-accent px-6 py-3 text-sm font-semibold text-[#041008] shadow-[0_0_26px_rgba(0,255,136,0.18)] transition hover:bg-[#56ffad]"
+          >
+            Explore Playground
+          </a>
+          <a
             href={profile.githubUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-accent/60 bg-accent px-6 py-3 text-sm font-semibold text-[#041008] shadow-[0_0_26px_rgba(0,255,136,0.18)] transition hover:bg-[#56ffad]"
+            className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-border bg-surface/80 px-6 py-3 text-sm font-semibold text-text transition hover:border-accent hover:text-accent"
           >
             View GitHub
           </a>
           <a
-            href="#projects"
+            href={profile.kaggleUrl}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-border bg-surface/80 px-6 py-3 text-sm font-semibold text-text transition hover:border-accent hover:text-accent"
           >
-            Explore Playground
+            Kaggle
           </a>
         </div>
       </div>
