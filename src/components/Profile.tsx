@@ -28,30 +28,30 @@ export function Profile() {
             ))}
           </div>
         </div>
-        <div className="mt-6 grid gap-4 border-t border-border pt-5 lg:grid-cols-2">
-          <div>
+        <div className="mt-6 space-y-4 border-t border-border pt-5">
+          <div className="grid gap-3 lg:grid-cols-[8rem_1fr] lg:items-start">
             <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted">Skills</p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div className="flex flex-wrap gap-2">
               {skills.map((skill) => (
-                <div
+                <span
                   key={skill}
-                  className="rounded-xl border border-border bg-[#0b0b0b]/90 px-3 py-3 text-xs font-medium text-text transition hover:border-accent hover:text-accent"
+                  className="rounded-full border border-border bg-[#0b0b0b]/80 px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent hover:text-accent"
                 >
                   {skill}
-                </div>
+                </span>
               ))}
             </div>
           </div>
-          <div>
+          <div className="grid gap-3 lg:grid-cols-[8rem_1fr] lg:items-start">
             <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted">Interests</p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div className="flex flex-wrap gap-2">
               {profile.interests.map((interest) => (
-                <div
+                <span
                   key={interest}
-                  className="rounded-xl border border-border bg-[#0b0b0b]/90 px-3 py-3 text-xs font-medium text-text transition hover:border-accent hover:text-accent"
+                  className="rounded-full border border-border bg-[#0b0b0b]/80 px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent hover:text-accent"
                 >
                   {interest}
-                </div>
+                </span>
               ))}
             </div>
           </div>
