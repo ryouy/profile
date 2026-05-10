@@ -5,6 +5,10 @@ export const metadata: Metadata = {
   title: "Ryo / ryouy | Playground",
   description:
     "Engineering playground by ryouy",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
