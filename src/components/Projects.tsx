@@ -52,7 +52,7 @@ export function Projects() {
   const [rotation, setRotation] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
-  const dragStart = useRef<{ x: number; rotation: number } | null>(null);
+  const dragStart = useRef<{ x: number; y: number; rotation: number } | null>(null);
   const dragMeta = useRef({ lastX: 0, lastTime: 0, velocity: 0, moved: false });
   const pressedProjectIndex = useRef<number | null>(null);
   const rotationRef = useRef(0);
@@ -168,6 +168,14 @@ export function Projects() {
     animateTo(target);
   };
 
+  const getProjectIndexAtPoint = (x: number, y: number) => {
+    const element = document.elementFromPoint(x, y);
+    const projectButton = element?.closest("[data-project-index]");
+    const index = projectButton instanceof HTMLElement ? Number(projectButton.dataset.projectIndex) : NaN;
+
+    return Number.isFinite(index) ? index : null;
+  };
+
   return (
     <section id="projects" className="py-16 sm:py-20">
       <SectionHeader eyebrow="<playground />" title="Project Playground" />
@@ -177,13 +185,10 @@ export function Projects() {
           className="relative h-[28rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#050608] touch-none select-none sm:h-[32rem]"
           onPointerDown={(event) => {
             markInteraction();
-            const projectButton = (event.target as HTMLElement).closest("[data-project-index]");
-            pressedProjectIndex.current = projectButton
-              ? Number((projectButton as HTMLElement).dataset.projectIndex)
-              : null;
+            pressedProjectIndex.current = getProjectIndexAtPoint(event.clientX, event.clientY);
             stopAnimation();
             setIsDragging(true);
-            dragStart.current = { x: event.clientX, rotation };
+            dragStart.current = { x: event.clientX, y: event.clientY, rotation };
             dragMeta.current = {
               lastX: event.clientX,
               lastTime: performance.now(),
@@ -198,6 +203,7 @@ export function Projects() {
             }
 
             const deltaX = event.clientX - dragStart.current.x;
+            const deltaY = event.clientY - dragStart.current.y;
             const nextRotation = dragStart.current.rotation + deltaX * 0.36;
             const now = performance.now();
             const elapsed = Math.max(now - dragMeta.current.lastTime, 1);
@@ -206,16 +212,19 @@ export function Projects() {
             dragMeta.current.velocity = deltaRotation / elapsed;
             dragMeta.current.lastX = event.clientX;
             dragMeta.current.lastTime = now;
-            dragMeta.current.moved = dragMeta.current.moved || Math.abs(deltaX) > 5;
+            dragMeta.current.moved = dragMeta.current.moved || Math.hypot(deltaX, deltaY) > 14;
             setRotationValue(nextRotation);
           }}
           onPointerUp={(event) => {
+            const releasedProjectIndex = getProjectIndexAtPoint(event.clientX, event.clientY);
+            const tappedProjectIndex = releasedProjectIndex ?? pressedProjectIndex.current;
+
             dragStart.current = null;
             setIsDragging(false);
             if (dragMeta.current.moved) {
               glideAndSnap(dragMeta.current.velocity);
-            } else if (pressedProjectIndex.current !== null) {
-              selectProject(pressedProjectIndex.current);
+            } else if (tappedProjectIndex !== null) {
+              selectProject(tappedProjectIndex);
             }
             pressedProjectIndex.current = null;
             if (event.currentTarget.hasPointerCapture(event.pointerId)) {
