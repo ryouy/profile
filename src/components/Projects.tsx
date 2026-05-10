@@ -134,10 +134,15 @@ export function Projects() {
     const updateMetrics = () => {
       const rect = panel.getBoundingClientRect();
       const isCompact = rect.width < 560;
-      const cardWidth = isCompact ? 128 : 192;
-      const padding = isCompact ? 18 : 34;
-      const orbitRadius = Math.max(84, Math.min(rect.width, rect.height) / 2 - cardWidth / 2 - padding);
-      const innerSize = isCompact ? 116 : 176;
+
+      if (!isCompact) {
+        setOrbitMetrics({ cardWidth: 192, innerSize: 176, orbitRadius: 210 });
+        return;
+      }
+
+      const cardWidth = 128;
+      const orbitRadius = Math.max(84, Math.min(rect.width, rect.height) / 2 - cardWidth / 2 - 18);
+      const innerSize = 116;
 
       setOrbitMetrics({ cardWidth, innerSize, orbitRadius });
     };
@@ -211,7 +216,7 @@ export function Projects() {
       <div className="grid items-stretch gap-6 lg:grid-cols-[1.18fr_0.82fr]">
         <div
           ref={orbitPanelRef}
-          className="relative h-[24rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#050608] touch-none select-none sm:h-[32rem]"
+          className="relative h-[24rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#050608] touch-none select-none sm:h-[32rem] lg:h-[34rem]"
           onPointerDown={(event) => {
             markInteraction();
             pressedProjectIndex.current = getProjectIndexAtPoint(event.clientX, event.clientY);
