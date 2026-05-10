@@ -51,11 +51,14 @@ function TechTags({ tech }: { tech: string[] }) {
 export function Projects() {
   const [rotation, setRotation] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [lastInteraction, setLastInteraction] = useState(Date.now());
   const dragStart = useRef<{ x: number; rotation: number } | null>(null);
   const dragMeta = useRef({ lastX: 0, lastTime: 0, velocity: 0, moved: false });
   const pressedProjectIndex = useRef<number | null>(null);
   const rotationRef = useRef(0);
   const animationFrame = useRef<number | null>(null);
+  const idleFrame = useRef<number | null>(null);
+  const lastIdleTick = useRef<number | null>(null);
 
   const setRotationValue = (value: number) => {
     rotationRef.current = value;
@@ -67,6 +70,11 @@ export function Projects() {
       cancelAnimationFrame(animationFrame.current);
       animationFrame.current = null;
     }
+  };
+
+  const markInteraction = () => {
+    setLastInteraction(Date.now());
+    lastIdleTick.current = null;
   };
 
   const animateTo = (target: number) => {
@@ -114,6 +122,31 @@ export function Projects() {
     return () => stopAnimation();
   }, []);
 
+  useEffect(() => {
+    const tick = (time: number) => {
+      const idleFor = Date.now() - lastInteraction;
+
+      if (!isDragging && !animationFrame.current && idleFor > 4200) {
+        const previous = lastIdleTick.current ?? time;
+        const elapsed = time - previous;
+        lastIdleTick.current = time;
+        setRotationValue(rotationRef.current + elapsed * 0.004);
+      } else {
+        lastIdleTick.current = null;
+      }
+
+      idleFrame.current = requestAnimationFrame(tick);
+    };
+
+    idleFrame.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (idleFrame.current) {
+        cancelAnimationFrame(idleFrame.current);
+      }
+    };
+  }, [isDragging, lastInteraction]);
+
   const activeIndex = useMemo(() => {
     return projects.reduce(
       (active, _project, index) => {
@@ -128,6 +161,7 @@ export function Projects() {
   const activeProject = projects[activeIndex];
 
   const selectProject = (index: number) => {
+    markInteraction();
     const baseAngle = index * stepAngle;
     const current = rotationRef.current;
     const target = current + normalizeAngle(-baseAngle - current);
@@ -142,6 +176,7 @@ export function Projects() {
         <div
           className="relative h-[28rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#050608] touch-none select-none sm:h-[32rem]"
           onPointerDown={(event) => {
+            markInteraction();
             const projectButton = (event.target as HTMLElement).closest("[data-project-index]");
             pressedProjectIndex.current = projectButton
               ? Number((projectButton as HTMLElement).dataset.projectIndex)
@@ -195,8 +230,8 @@ export function Projects() {
           }}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_22%,rgba(255,255,255,0.18)_0_1px,transparent_1.5px),radial-gradient(circle_at_72%_28%,rgba(0,212,255,0.22)_0_1px,transparent_1.5px),radial-gradient(circle_at_62%_76%,rgba(255,255,255,0.12)_0_1px,transparent_1.5px),radial-gradient(circle_at_18%_72%,rgba(0,255,136,0.16)_0_1px,transparent_1.5px)] opacity-70" />
-          <div className="absolute left-1/2 top-1/2 h-[22rem] w-[32rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/10 shadow-[0_0_80px_rgba(0,212,255,0.08)]" />
-          <div className="absolute left-1/2 top-1/2 h-[14rem] w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-accentSecondary/10" />
+          <div className="absolute left-1/2 top-1/2 h-[23rem] w-[23rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/10 shadow-[0_0_80px_rgba(0,212,255,0.08)]" />
+          <div className="absolute left-1/2 top-1/2 h-[16rem] w-[16rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-accentSecondary/10" />
           <div className="absolute inset-8 rounded-full bg-[radial-gradient(circle,rgba(0,255,136,0.10)_0%,transparent_34%,rgba(0,212,255,0.06)_45%,transparent_66%)]" />
           <div className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/20 bg-[#050505]/95 shadow-[0_0_70px_rgba(0,255,136,0.16),inset_0_0_28px_rgba(0,212,255,0.06)] sm:h-44 sm:w-44">
             <div className="flex h-full flex-col items-center justify-center px-5 text-center">
@@ -209,8 +244,9 @@ export function Projects() {
             const angle = normalizeAngle(baseAngle + rotation);
             const radians = (angle * Math.PI) / 180;
             const depth = (Math.cos(radians) + 1) / 2;
-            const x = Math.sin(radians) * 235;
-            const y = Math.cos(radians) * 155;
+            const radius = 172;
+            const x = Math.sin(radians) * radius;
+            const y = Math.cos(radians) * radius;
             const isActive = index === activeIndex;
 
             return (
