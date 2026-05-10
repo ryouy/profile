@@ -138,7 +138,7 @@ export function Projects() {
     <section id="projects" className="py-16 sm:py-20">
       <SectionHeader eyebrow="<playground />" title="Project Playground" />
 
-      <div className="grid gap-6 lg:grid-cols-[1.18fr_0.82fr] lg:items-center">
+      <div className="grid items-stretch gap-6 lg:grid-cols-[1.18fr_0.82fr]">
         <div
           className="relative h-[28rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#080808]/90 touch-none select-none sm:h-[32rem]"
           onPointerDown={(event) => {
@@ -197,8 +197,7 @@ export function Projects() {
           <div className="absolute inset-8 rounded-full border border-accent/10 bg-[radial-gradient(circle,rgba(0,255,136,0.08)_0%,transparent_38%,rgba(0,212,255,0.04)_39%,transparent_64%)]" />
           <div className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-[#050505] shadow-[0_0_60px_rgba(0,255,136,0.08)] sm:h-44 sm:w-44">
             <div className="flex h-full flex-col items-center justify-center px-5 text-center">
-              <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-accent">orbit</p>
-              <p className="mt-2 text-sm font-semibold leading-5 text-text">{activeProject.title}</p>
+              <p className="text-sm font-semibold leading-5 text-text">{activeProject.title}</p>
             </div>
           </div>
 
@@ -233,7 +232,7 @@ export function Projects() {
           })}
         </div>
 
-        <article className="rounded-[1.75rem] border border-border bg-surface/85 p-6 backdrop-blur">
+        <article className="flex h-full flex-col rounded-[1.75rem] border border-border bg-surface/85 p-6 backdrop-blur">
           <label className="mb-5 block">
             <span className="mb-2 block font-mono text-[11px] uppercase tracking-[0.22em] text-muted">
               Jump to project
