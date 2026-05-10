@@ -140,7 +140,7 @@ export function Projects() {
 
       <div className="grid items-stretch gap-6 lg:grid-cols-[1.18fr_0.82fr]">
         <div
-          className="relative h-[28rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#080808]/90 touch-none select-none sm:h-[32rem]"
+          className="relative h-[28rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#050608] touch-none select-none sm:h-[32rem]"
           onPointerDown={(event) => {
             const projectButton = (event.target as HTMLElement).closest("[data-project-index]");
             pressedProjectIndex.current = projectButton
@@ -194,8 +194,11 @@ export function Projects() {
             animateTo(Math.round(rotationRef.current / stepAngle) * stepAngle);
           }}
         >
-          <div className="absolute inset-8 rounded-full border border-accent/10 bg-[radial-gradient(circle,rgba(0,255,136,0.08)_0%,transparent_38%,rgba(0,212,255,0.04)_39%,transparent_64%)]" />
-          <div className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-[#050505] shadow-[0_0_60px_rgba(0,255,136,0.08)] sm:h-44 sm:w-44">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_22%,rgba(255,255,255,0.18)_0_1px,transparent_1.5px),radial-gradient(circle_at_72%_28%,rgba(0,212,255,0.22)_0_1px,transparent_1.5px),radial-gradient(circle_at_62%_76%,rgba(255,255,255,0.12)_0_1px,transparent_1.5px),radial-gradient(circle_at_18%_72%,rgba(0,255,136,0.16)_0_1px,transparent_1.5px)] opacity-70" />
+          <div className="absolute left-1/2 top-1/2 h-[22rem] w-[32rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/10 shadow-[0_0_80px_rgba(0,212,255,0.08)]" />
+          <div className="absolute left-1/2 top-1/2 h-[14rem] w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-accentSecondary/10" />
+          <div className="absolute inset-8 rounded-full bg-[radial-gradient(circle,rgba(0,255,136,0.10)_0%,transparent_34%,rgba(0,212,255,0.06)_45%,transparent_66%)]" />
+          <div className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/20 bg-[#050505]/95 shadow-[0_0_70px_rgba(0,255,136,0.16),inset_0_0_28px_rgba(0,212,255,0.06)] sm:h-44 sm:w-44">
             <div className="flex h-full flex-col items-center justify-center px-5 text-center">
               <p className="text-sm font-semibold leading-5 text-text">{activeProject.title}</p>
             </div>
