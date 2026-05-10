@@ -1,5 +1,4 @@
 import { ExternalLinks } from "../components/ExternalLinks";
-import { Footer } from "../components/Footer";
 import { Hero } from "../components/Hero";
 import { Profile } from "../components/Profile";
 import { Projects } from "../components/Projects";
@@ -14,7 +13,6 @@ export default function Home() {
         <Profile />
         <Projects />
         <ExternalLinks />
-        <Footer />
       </div>
     </main>
   );

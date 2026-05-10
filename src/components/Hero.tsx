@@ -26,8 +26,8 @@ export function Hero() {
           CS Student, Developer, and Data Science Explorer.
         </p>
         <p className="mt-5 max-w-2xl text-base leading-8 text-muted sm:text-lg">
-          A personal playground for lightweight web apps, data visualizations, research notes, and small
-          tools made while exploring data science, computational social science, art, and interfaces.
+          Engineering playground for web apps, data visualization, research tooling, and interface
+          experiments built around small, useful ideas.
         </p>
 
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
