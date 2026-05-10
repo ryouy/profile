@@ -52,6 +52,7 @@ export function Projects() {
   const [rotation, setRotation] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
+  const [orbitMetrics, setOrbitMetrics] = useState({ cardWidth: 128, innerSize: 120, orbitRadius: 86 });
   const dragStart = useRef<{ x: number; y: number; rotation: number } | null>(null);
   const dragMeta = useRef({ lastX: 0, lastTime: 0, velocity: 0, moved: false });
   const pressedProjectIndex = useRef<number | null>(null);
@@ -59,6 +60,7 @@ export function Projects() {
   const animationFrame = useRef<number | null>(null);
   const idleFrame = useRef<number | null>(null);
   const lastIdleTick = useRef<number | null>(null);
+  const orbitPanelRef = useRef<HTMLDivElement | null>(null);
 
   const setRotationValue = (value: number) => {
     rotationRef.current = value;
@@ -123,6 +125,32 @@ export function Projects() {
   }, []);
 
   useEffect(() => {
+    const panel = orbitPanelRef.current;
+
+    if (!panel) {
+      return;
+    }
+
+    const updateMetrics = () => {
+      const rect = panel.getBoundingClientRect();
+      const isCompact = rect.width < 560;
+      const cardWidth = isCompact ? 128 : 192;
+      const padding = isCompact ? 18 : 34;
+      const orbitRadius = Math.max(84, Math.min(rect.width, rect.height) / 2 - cardWidth / 2 - padding);
+      const innerSize = isCompact ? 116 : 176;
+
+      setOrbitMetrics({ cardWidth, innerSize, orbitRadius });
+    };
+
+    updateMetrics();
+
+    const observer = new ResizeObserver(updateMetrics);
+    observer.observe(panel);
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     const tick = (time: number) => {
       const idleFor = Date.now() - lastInteraction;
 
@@ -182,7 +210,8 @@ export function Projects() {
 
       <div className="grid items-stretch gap-6 lg:grid-cols-[1.18fr_0.82fr]">
         <div
-          className="relative h-[28rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#050608] touch-none select-none sm:h-[32rem]"
+          ref={orbitPanelRef}
+          className="relative h-[24rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#050608] touch-none select-none sm:h-[32rem]"
           onPointerDown={(event) => {
             markInteraction();
             pressedProjectIndex.current = getProjectIndexAtPoint(event.clientX, event.clientY);
@@ -239,12 +268,21 @@ export function Projects() {
           }}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_22%,rgba(255,255,255,0.18)_0_1px,transparent_1.5px),radial-gradient(circle_at_72%_28%,rgba(0,212,255,0.22)_0_1px,transparent_1.5px),radial-gradient(circle_at_62%_76%,rgba(255,255,255,0.12)_0_1px,transparent_1.5px),radial-gradient(circle_at_18%_72%,rgba(0,255,136,0.16)_0_1px,transparent_1.5px)] opacity-70" />
-          <div className="absolute left-1/2 top-1/2 h-[23rem] w-[23rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/10 shadow-[0_0_80px_rgba(0,212,255,0.08)]" />
-          <div className="absolute left-1/2 top-1/2 h-[16rem] w-[16rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-accentSecondary/10" />
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/10 shadow-[0_0_80px_rgba(0,212,255,0.08)]"
+            style={{ height: orbitMetrics.orbitRadius * 2, width: orbitMetrics.orbitRadius * 2 }}
+          />
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accentSecondary/10"
+            style={{ height: orbitMetrics.orbitRadius * 1.36, width: orbitMetrics.orbitRadius * 1.36 }}
+          />
           <div className="absolute inset-8 rounded-full bg-[radial-gradient(circle,rgba(0,255,136,0.10)_0%,transparent_34%,rgba(0,212,255,0.06)_45%,transparent_66%)]" />
-          <div className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/20 bg-[#050505]/95 shadow-[0_0_70px_rgba(0,255,136,0.16),inset_0_0_28px_rgba(0,212,255,0.06)] sm:h-44 sm:w-44">
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/20 bg-[#050505]/95 shadow-[0_0_70px_rgba(0,255,136,0.16),inset_0_0_28px_rgba(0,212,255,0.06)]"
+            style={{ height: orbitMetrics.innerSize, width: orbitMetrics.innerSize }}
+          >
             <div className="flex h-full flex-col items-center justify-center px-5 text-center">
-              <p className="text-sm font-semibold leading-5 text-text">{activeProject.title}</p>
+              <p className="text-xs font-semibold leading-5 text-text sm:text-sm">{activeProject.title}</p>
             </div>
           </div>
 
@@ -253,9 +291,8 @@ export function Projects() {
             const angle = normalizeAngle(baseAngle + rotation);
             const radians = (angle * Math.PI) / 180;
             const depth = (Math.cos(radians) + 1) / 2;
-            const radius = 172;
-            const x = Math.sin(radians) * radius;
-            const y = Math.cos(radians) * radius;
+            const x = Math.sin(radians) * orbitMetrics.orbitRadius;
+            const y = Math.cos(radians) * orbitMetrics.orbitRadius;
             const isActive = index === activeIndex;
 
             return (
@@ -263,18 +300,19 @@ export function Projects() {
                 key={project.title}
                 type="button"
                 data-project-index={index}
-                className={`absolute left-1/2 top-1/2 w-40 rounded-2xl border bg-surface/95 p-3 text-left shadow-lg backdrop-blur sm:w-48 ${
+                className={`absolute left-1/2 top-1/2 rounded-2xl border bg-surface/95 p-3 text-left shadow-lg backdrop-blur ${
                   isDragging ? "cursor-grabbing" : "cursor-grab transition-[transform,opacity,border-color] duration-300 ease-out"
                 }`}
                 style={{
                   borderColor: isActive ? "#00ff88" : "#262626",
                   opacity: 0.4 + depth * 0.6,
+                  width: orbitMetrics.cardWidth,
                   transform: `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${0.74 + depth * 0.24})`,
                   zIndex: Math.round(depth * 100),
                 }}
               >
                 <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">{project.category}</span>
-                <span className="mt-2 block text-sm font-semibold leading-5 text-text">{project.title}</span>
+                <span className="mt-2 block text-xs font-semibold leading-5 text-text sm:text-sm">{project.title}</span>
               </button>
             );
           })}
