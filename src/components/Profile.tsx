@@ -14,9 +14,9 @@ export function Profile() {
     <section id="profile" className="py-8 sm:py-12">
       <SectionHeader eyebrow="<profile />" title="About me" />
       <div className="rounded-[1.75rem] border border-border bg-surface/85 p-6 backdrop-blur sm:p-8">
-        <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <div>
-            <p className="max-w-3xl text-base leading-8 text-muted sm:text-lg">{profile.bio}</p>
+        <div className="grid items-stretch gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="flex rounded-2xl border border-border bg-[#0d0d0d]/60 p-5 sm:p-6">
+            <p className="max-w-3xl self-center text-base leading-8 text-muted sm:text-lg">{profile.bio}</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {facts.map(([label, value]) => (

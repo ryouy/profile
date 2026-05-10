@@ -5,7 +5,7 @@ export const profile = {
   affiliation: "University of Aizu",
   location: "Aizuwakamatsu, Japan",
   workBase: "Azumino, Nagano",
-  bio: "I am a CS student at the University of Aizu building small web apps, data visualizations, and research tools. I am interested in data science, computational social science, art, hiking, and field-oriented engineering around Azumino, Nagano.",
+  bio: "I build small, thoughtful systems at the intersection of software, data, research, and the web. My interests span computational social science, data visualization, mountain trails, art, and philosophy.",
   interests: [
     "Computational social science",
     "Manufacturing",
