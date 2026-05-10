@@ -42,7 +42,7 @@ export function Hero() {
             rel="noopener noreferrer"
             className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-border bg-surface/80 px-6 py-3 text-sm font-semibold text-text transition hover:border-accent hover:text-accent"
           >
-            View GitHub
+            GitHub
           </a>
           <a
             href={profile.kaggleUrl}

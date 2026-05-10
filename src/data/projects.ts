@@ -101,6 +101,20 @@ export const projects: Project[] = [
     featured: false
   },
   {
+    title: "6roPnt",
+    description:
+      "A small browser app for drawing on a rotating pottery-wheel-like canvas.",
+    details: [
+      "6roPnt lets users drag inside a circular canvas while it rotates, creating repeated radial strokes with adjustable color, brush size, rotation speed, and copy count.",
+      "It is a compact HTML/CSS/JavaScript experiment that turns a simple drawing surface into a playful generative art tool."
+    ],
+    category: "Experiment",
+    tech: ["HTML", "CSS", "JavaScript", "Canvas"],
+    appUrl: "https://6ro-pnt.vercel.app",
+    githubUrl: "https://github.com/ryouy/6roPnt",
+    featured: false
+  },
+  {
     title: "Graduation Thesis",
     description:
       "A research-oriented repository connected to graduation thesis work in data science.",
