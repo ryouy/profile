@@ -4,7 +4,7 @@ const terminalLines = [
   { command: "whoami", output: profile.username },
   {
     command: "focus",
-    output: "data science / computational social science / web apps / art",
+    output: "data science / computational social science / art",
   },
   { command: "status", output: "keeping small experiments alive" },
 ];
