@@ -3,10 +3,10 @@ import { profile } from "../data/profile";
 const terminalLines = [
   { command: "whoami", output: profile.username },
   {
-    command: "focus",
+    command: "interests",
     output: "data science / computational social science / art",
   },
-  { command: "status", output: "keeping small experiments alive" },
+  { command: "status", output: "quietly growing a world through small experiments" },
 ];
 
 export function Hero() {
@@ -26,7 +26,7 @@ export function Hero() {
           Hiker, Developer, and Data Science Explorer.
         </p>
         <p className="mt-5 max-w-2xl text-base leading-8 text-muted sm:text-lg">
-          Engineering playground for web apps, data visualization, research tooling built around small, useful ideas.
+          A small playground for web apps, data visualization, and research tools, slowly grown around useful little ideas.
         </p>
 
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -62,7 +62,7 @@ export function Hero() {
             <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
             <span className="h-3 w-3 rounded-full bg-accent" />
           </div>
-          <p className="font-mono text-xs text-muted">~/ryouy/mainpage</p>
+          <p className="font-mono text-xs text-muted">~/ryouy/index</p>
         </div>
         <div className="space-y-6 font-mono text-sm leading-7">
           {terminalLines.map((line) => (
