@@ -71,6 +71,21 @@ export const projects: Project[] = [
     featured: true
   },
   {
+    title: "Art Gallery",
+    description:
+      "A quiet gallery site for presenting paintings and photographs through a clean, image-first interface.",
+    details: [
+      "The site is designed as a small online gallery with separate spaces for paintings and photos, keeping the visual language restrained so the works stay at the center.",
+      "Content is managed through markdown files with frontmatter and image files in public folders, so new works can be added from GitHub without a CMS or database.",
+      "It uses Next.js App Router, TypeScript, and Tailwind CSS to support listing pages, detail pages, responsive grids, and post-order or random-order browsing."
+    ],
+    category: "Web App",
+    tech: ["Next.js", "TypeScript", "Tailwind CSS", "Markdown", "Vercel"],
+    appUrl: "https://ryouy-gallery.vercel.app",
+    githubUrl: "https://github.com/ryouy/art-gallery",
+    featured: true
+  },
+  {
     title: "Election 2026 Candidate Survey Viewer",
     description:
       "A static 3D scatter viewer for exploring Japanese election candidate survey answers through dimensionality reduction.",

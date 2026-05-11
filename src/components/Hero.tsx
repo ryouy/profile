@@ -23,7 +23,7 @@ export function Hero() {
           Ryo / <span className="text-accent">ryouy</span>
         </h1>
         <p className="mt-6 text-xl font-medium text-text sm:text-2xl">
-          Hiker, Developer,Artist, and Data Explorer.
+          Hiker, Developer, Artist, and Data Explorer.
         </p>
         <p className="mt-5 max-w-2xl text-base leading-8 text-muted sm:text-lg">
           A small playground for web apps, data visualization, and research tools, slowly growing around useful little ideas.
@@ -52,10 +52,19 @@ export function Hero() {
           >
             Kaggle
           </a>
+          <a
+            href={profile.galleryUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative inline-flex min-h-12 items-center justify-center overflow-hidden rounded-2xl border border-white/65 bg-[linear-gradient(135deg,#f7f7f7_0%,#d7d7d7_48%,#9faaa5_100%)] px-7 py-3 text-sm font-semibold text-[#050505] shadow-[0_16px_42px_rgba(245,245,245,0.16),0_0_22px_rgba(0,255,136,0.08)] transition hover:-translate-y-0.5 hover:border-white hover:shadow-[0_22px_52px_rgba(245,245,245,0.22),0_0_28px_rgba(0,255,136,0.14)]"
+          >
+            <span className="absolute inset-x-3 top-0 h-px bg-white/90" />
+            <span className="relative">Art Gallery</span>
+          </a>
         </div>
       </div>
 
-      <div className="terminal-shadow rounded-[1.75rem] border border-border bg-[#0b0b0b]/95 p-4 backdrop-blur sm:p-6">
+      <div className="terminal-shadow rounded-[1.75rem] border border-border bg-[#0b0b0b]/95 p-4 backdrop-blur sm:p-6 lg:translate-y-12 xl:translate-y-16">
         <div className="mb-5 flex items-center justify-between border-b border-border pb-4">
           <div className="flex gap-2">
             <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />

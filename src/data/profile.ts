@@ -3,7 +3,7 @@ export const profile = {
   username: "ryouy",
   role: "CS Student / Artist / Hiker",
   affiliation: "University of Aizu",
-  location: "Aizuwakamatsu, Japan",
+  location: "Aizuwakamatsu, Fukushima",
   workBase: "Azumino, Nagano",
   bio: "I build small, thoughtful systems at the intersection of art, data, research, and the web. My interests span computational social science, data visualization, mountain trails, art, and philosophy.",
   interests: [
@@ -16,5 +16,6 @@ export const profile = {
     "Kendo",
   ],
   githubUrl: "https://github.com/ryouy",
-  kaggleUrl: "https://www.kaggle.com/ryohmats"
+  kaggleUrl: "https://www.kaggle.com/ryohmats",
+  galleryUrl: "https://ryouy-gallery.vercel.app"
 };
