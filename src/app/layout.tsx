@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Ryo / ryouy | Playground",
+  title: "ryouy / Playground",
   description:
-    "Engineering playground by ryouy",
+    "playground by ryouy",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

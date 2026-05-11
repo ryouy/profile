@@ -1,9 +1,12 @@
 export const skills = [
-  "Data Analysis / Visualization",
-  "LLM",
+  "Data Analysis",
+  "Data Visualization",
+  "LLMs",
   "Machine Learning",
   "Python",
-  "TypeScript / React / Next.js",
-  "English / German",
-  
+  "TypeScript",
+  "React",
+  "Next.js",
+  "English",
+  "German",
 ];

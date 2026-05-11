@@ -5,7 +5,7 @@ import { skills } from "../data/skills";
 const facts = [
   ["Affiliation", profile.affiliation],
   ["Location", profile.location],
-  ["Work base", profile.workBase],
+  ["Future Base", profile.workBase],
   ["Role", profile.role],
 ];
 

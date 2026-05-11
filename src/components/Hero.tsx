@@ -23,10 +23,10 @@ export function Hero() {
           Ryo / <span className="text-accent">ryouy</span>
         </h1>
         <p className="mt-6 text-xl font-medium text-text sm:text-2xl">
-          Hiker, Developer, and Data Science Explorer.
+          Hiker, Developer,Artist, and Data Explorer.
         </p>
         <p className="mt-5 max-w-2xl text-base leading-8 text-muted sm:text-lg">
-          A small playground for web apps, data visualization, and research tools, slowly grown around useful little ideas.
+          A small playground for web apps, data visualization, and research tools, slowly growing around useful little ideas.
         </p>
 
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
