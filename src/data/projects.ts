@@ -86,6 +86,21 @@ export const projects: Project[] = [
     featured: true
   },
   {
+    title: "KUPOO",
+    description:
+      "A lively web gallery for the University of Aizu's unofficial drawing circle, KUPOO.",
+    details: [
+      "The site introduces KUPOO as an informal drawing circle at the University of Aizu and gives the group a colorful public home for its identity, artwork, members, and contact information.",
+      "It presents recent works through gallery pages backed by local markdown and JSON content, keeping the public site fast while still making the content easy to maintain in the repository.",
+      "The project also includes an admin page that can add, edit, and delete artworks, site text, and members through the GitHub API, connecting a playful front-facing site with practical content operations."
+    ],
+    category: "Club Site",
+    tech: ["Next.js", "React", "TypeScript", "Tailwind CSS", "GitHub API"],
+    appUrl: "https://kupoo.vercel.app",
+    githubUrl: "https://github.com/ryouy/kupoo",
+    featured: true
+  },
+  {
     title: "Election 2026 Candidate Survey Viewer",
     description:
       "A static 3D scatter viewer for exploring Japanese election candidate survey answers through dimensionality reduction.",
