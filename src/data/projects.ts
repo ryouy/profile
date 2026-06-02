@@ -2,7 +2,7 @@ export type Project = {
   title: string;
   description: string;
   details: string[];
-  category: "Web App" | "Data Visualization" | "Tool" | "Experiment" | "Club Site" | "Research";
+  category: "Web App" | "Data Visualization" | "Tool" | "Experiment" | "Club Site" | "Research" | "Game";
   tech: string[];
   appUrl: string;
   githubUrl: string;
@@ -10,6 +10,36 @@ export type Project = {
 };
 
 export const projects: Project[] = [
+  {
+    title: "MttR",
+    description:
+      "A simple diary blog that stores article JSON and images through the GitHub Contents API.",
+    details: [
+      "MttR keeps diary content in a GitHub repository rather than a separate CMS, using the GitHub Contents API to save both post JSON and images.",
+      "The app is deployed on Vercel and keeps the public reading experience lightweight while letting the content source stay close to the code.",
+      "It is a compact experiment in treating GitHub as a personal publishing backend, with a safe push flow for keeping local and remote content in sync."
+    ],
+    category: "Web App",
+    tech: ["Next.js", "React", "TypeScript", "GitHub Contents API", "Vercel"],
+    appUrl: "https://mttr-nu.vercel.app",
+    githubUrl: "https://github.com/ryouy/MttR",
+    featured: true
+  },
+  {
+    title: "VR Catch Stick Game",
+    description:
+      "A Unity VR reflex game where players use hand tracking to catch randomly falling sticks.",
+    details: [
+      "The game uses XR Hands so the player can interact directly with their hands instead of relying on controller-only input.",
+      "A random stick drops from an overhead holder, and the player earns score by catching it quickly through XR grab interaction.",
+      "The project combines core VR interaction pieces: hand tracking, front-facing UI, object grabbing, score updates, and sound feedback."
+    ],
+    category: "Game",
+    tech: ["Unity", "C#", "XR Hands", "XR Interaction Toolkit", "OpenXR"],
+    appUrl: "https://unityroom.com/games/stick_catch",
+    githubUrl: "https://github.com/ryouy/VR_project",
+    featured: true
+  },
   {
     title: "Human Topology",
     description:

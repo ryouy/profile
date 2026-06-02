@@ -10,6 +10,7 @@ const normalizeAngle = (angle: number) => {
 };
 
 const stepAngle = 360 / projects.length;
+const denseOrbit = projects.length > 10;
 
 function ProjectActions({ project }: { project: Project }) {
   return (
@@ -52,7 +53,12 @@ export function Projects() {
   const [rotation, setRotation] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
-  const [orbitMetrics, setOrbitMetrics] = useState({ cardWidth: 128, innerSize: 120, orbitRadius: 86 });
+  const [orbitMetrics, setOrbitMetrics] = useState({
+    cardWidth: 128,
+    innerSize: 120,
+    orbitRadius: 86,
+    innerOrbitRadius: 70,
+  });
   const dragStart = useRef<{ x: number; y: number; rotation: number } | null>(null);
   const dragMeta = useRef({ lastX: 0, lastTime: 0, velocity: 0, moved: false });
   const pressedProjectIndex = useRef<number | null>(null);
@@ -136,15 +142,21 @@ export function Projects() {
       const isCompact = rect.width < 560;
 
       if (!isCompact) {
-        setOrbitMetrics({ cardWidth: 192, innerSize: 176, orbitRadius: 210 });
+        setOrbitMetrics({
+          cardWidth: denseOrbit ? 168 : 192,
+          innerSize: 176,
+          orbitRadius: 216,
+          innerOrbitRadius: 162,
+        });
         return;
       }
 
-      const cardWidth = 128;
+      const cardWidth = denseOrbit ? 112 : 128;
       const orbitRadius = Math.max(84, Math.min(rect.width, rect.height) / 2 - cardWidth / 2 - 18);
+      const innerOrbitRadius = Math.max(64, orbitRadius - 28);
       const innerSize = 116;
 
-      setOrbitMetrics({ cardWidth, innerSize, orbitRadius });
+      setOrbitMetrics({ cardWidth, innerSize, orbitRadius, innerOrbitRadius });
     };
 
     updateMetrics();
@@ -279,7 +291,7 @@ export function Projects() {
           />
           <div
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accentSecondary/10"
-            style={{ height: orbitMetrics.orbitRadius * 1.36, width: orbitMetrics.orbitRadius * 1.36 }}
+            style={{ height: orbitMetrics.innerOrbitRadius * 2, width: orbitMetrics.innerOrbitRadius * 2 }}
           />
           <div className="absolute inset-8 rounded-full bg-[radial-gradient(circle,rgba(0,255,136,0.10)_0%,transparent_34%,rgba(0,212,255,0.06)_45%,transparent_66%)]" />
           <div
@@ -296,8 +308,9 @@ export function Projects() {
             const angle = normalizeAngle(baseAngle + rotation);
             const radians = (angle * Math.PI) / 180;
             const depth = (Math.cos(radians) + 1) / 2;
-            const x = Math.sin(radians) * orbitMetrics.orbitRadius;
-            const y = Math.cos(radians) * orbitMetrics.orbitRadius;
+            const laneRadius = denseOrbit && index % 2 === 1 ? orbitMetrics.innerOrbitRadius : orbitMetrics.orbitRadius;
+            const x = Math.sin(radians) * laneRadius;
+            const y = Math.cos(radians) * laneRadius;
             const isActive = index === activeIndex;
 
             return (
@@ -310,9 +323,9 @@ export function Projects() {
                 }`}
                 style={{
                   borderColor: isActive ? "#00ff88" : "#262626",
-                  opacity: 0.4 + depth * 0.6,
+                  opacity: 0.28 + depth * 0.72,
                   width: orbitMetrics.cardWidth,
-                  transform: `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${0.74 + depth * 0.24})`,
+                  transform: `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${0.68 + depth * 0.28})`,
                   zIndex: Math.round(depth * 100),
                 }}
               >
