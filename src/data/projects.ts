@@ -21,7 +21,7 @@ export const projects: Project[] = [
     ],
     category: "Web App",
     tech: ["Next.js", "React", "TypeScript", "GitHub Contents API", "Vercel"],
-    appUrl: "https://mttr-nu.vercel.app",
+    appUrl: "https://move2theregions.vercel.app/",
     githubUrl: "https://github.com/ryouy/MttR",
     featured: true
   },
