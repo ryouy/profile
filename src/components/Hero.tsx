@@ -53,13 +53,13 @@ export function Hero() {
             Kaggle
           </a>
           <a
-            href={profile.galleryUrl}
+            href={profile.kupooUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="group relative inline-flex min-h-12 items-center justify-center overflow-hidden rounded-2xl border border-white/65 bg-[linear-gradient(135deg,#f7f7f7_0%,#d7d7d7_48%,#9faaa5_100%)] px-7 py-3 text-sm font-semibold text-[#050505] shadow-[0_16px_42px_rgba(245,245,245,0.16),0_0_22px_rgba(0,255,136,0.08)] transition hover:-translate-y-0.5 hover:border-white hover:shadow-[0_22px_52px_rgba(245,245,245,0.22),0_0_28px_rgba(0,255,136,0.14)]"
           >
             <span className="absolute inset-x-3 top-0 h-px bg-white/90" />
-            <span className="relative">Art Gallery</span>
+            <span className="relative">KUPOO</span>
           </a>
         </div>
       </div>

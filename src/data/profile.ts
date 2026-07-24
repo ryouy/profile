@@ -17,5 +17,5 @@ export const profile = {
   ],
   githubUrl: "https://github.com/ryouy",
   kaggleUrl: "https://www.kaggle.com/ryohmats",
-  galleryUrl: "https://ryouy-gallery.vercel.app"
+  kupooUrl: "https://kupoo.vercel.app"
 };

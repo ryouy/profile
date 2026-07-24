@@ -71,21 +71,6 @@ export const projects: Project[] = [
     featured: true
   },
   {
-    title: "MttR",
-    description:
-      "A simple diary blog that stores article JSON and images through the GitHub Contents API.",
-    details: [
-      "MttR keeps diary content in a GitHub repository rather than a separate CMS, using the GitHub Contents API to save both post JSON and images.",
-      "The app is deployed on Vercel and keeps the public reading experience lightweight while letting the content source stay close to the code.",
-      "It is a compact experiment in treating GitHub as a personal publishing backend, with a safe push flow for keeping local and remote content in sync."
-    ],
-    category: "Web App",
-    tech: ["Next.js", "React", "TypeScript", "GitHub Contents API", "Vercel"],
-    appUrl: "https://move2theregions.vercel.app/",
-    githubUrl: "https://github.com/ryouy/MttR",
-    featured: true
-  },
-  {
     title: "VR Catch Stick Game",
     description:
       "A Unity VR reflex game where players use hand tracking to catch randomly falling sticks.",
