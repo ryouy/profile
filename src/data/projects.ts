@@ -11,6 +11,66 @@ export type Project = {
 
 export const projects: Project[] = [
   {
+    title: "Audio Intelligence",
+    description:
+      "A Streamlit app that turns YouTube videos and uploaded audio into acoustic, linguistic, and semantic insights.",
+    details: [
+      "Audio Intelligence brings waveform, loudness, frequency, pitch, and tempo analysis together with transcription, speaker separation, emotion cues, and semantic search.",
+      "It uses Whisper for speech recognition and can call OpenAI to suggest low-information filler words before excluding them from the analysis with the user's approval.",
+      "The project packages a broad audio-analysis pipeline into an approachable visual workspace, with interactive charts, exports, tests, and optional Docker deployment."
+    ],
+    category: "Data Visualization",
+    tech: ["Python", "Streamlit", "Whisper", "librosa", "OpenAI API"],
+    appUrl: "https://ytaudio-analyzer.streamlit.app/",
+    githubUrl: "https://github.com/ryouy/audio-analyzer",
+    featured: true
+  },
+  {
+    title: "Comment Analysis",
+    description:
+      "An exploratory dashboard for visualizing the space between a news article and the conversation around it.",
+    details: [
+      "Paste a public news URL or provide JSON, CSV, or manual input to explore emotion, discussion topics, minority opinions, diffusion, and the quality of the conversation.",
+      "Views such as Opinion Galaxy, the emotion seismograph, perception gaps, topic drift, and headline analysis turn large comment sets into structures that are easier to inspect.",
+      "The analysis combines browser-based content collection with statistical and machine-learning methods, while remaining usable without an OpenAI API key."
+    ],
+    category: "Data Visualization",
+    tech: ["Python", "Streamlit", "Plotly", "scikit-learn", "OpenAI API"],
+    appUrl: "https://yhcomment-analysis.streamlit.app/",
+    githubUrl: "https://github.com/ryouy/comment-analysis",
+    featured: true
+  },
+  {
+    title: "Mindscape AI",
+    description:
+      "An opinion-space visualizer that follows how multiple AI personas move across a topic over time.",
+    details: [
+      "Mindscape AI generates opinions from multiple personas at multiple points in time, then places them in a shared semantic space using OpenAI embeddings, UMAP, and KMeans.",
+      "Users can add their own position, find nearby or distant viewpoints, animate changes over time, and zoom semantically into individual clusters.",
+      "LLM-generated cluster names and CSV export make the visualization useful both for open-ended exploration and for taking the generated data into further analysis."
+    ],
+    category: "Data Visualization",
+    tech: ["Python", "Streamlit", "OpenAI", "UMAP", "Plotly"],
+    appUrl: "https://mindscapeai.streamlit.app/",
+    githubUrl: "https://github.com/ryouy/MindscapeAI",
+    featured: true
+  },
+  {
+    title: "Memories",
+    description:
+      "A personal travel journal for collecting trips, photographs, locations, and stories in one place.",
+    details: [
+      "Memories presents travel entries as a fast public website while keeping the underlying stories and uploaded media in repository-managed content.",
+      "Dedicated entry pages combine written records with photos, maps, and embedded media, making each trip feel more like a place to revisit than a conventional blog post.",
+      "A protected admin workflow supports creating and maintaining entries, while content validation and indexing scripts keep the published collection dependable."
+    ],
+    category: "Web App",
+    tech: ["Next.js", "React", "TypeScript", "Leaflet", "Markdown"],
+    appUrl: "https://trvlmmrs.vercel.app/",
+    githubUrl: "https://github.com/ryouy/memories",
+    featured: true
+  },
+  {
     title: "MttR",
     description:
       "A simple diary blog that stores article JSON and images through the GitHub Contents API.",
