@@ -11,6 +11,81 @@ export type Project = {
 
 export const projects: Project[] = [
   {
+    title: "Viewport City",
+    description:
+      "A browser puzzle where window size, scrolling, zoom, and tab visibility become the physical laws of a city.",
+    details: [
+      "Viewport City turns the browser itself into the controller: resizing the window, scrolling, changing zoom, and hiding the tab alter the world and unlock each stage.",
+      "On-screen sliders mirror the unusual desktop controls so every puzzle remains playable on mobile without losing the central idea.",
+      "Progress and best records stay in local storage, while hints, pause controls, keyboard shortcuts, and tested game logic make the one-screen experiment feel complete."
+    ],
+    category: "Game",
+    tech: ["JavaScript", "Vite", "HTML", "CSS", "Local Storage"],
+    appUrl: "https://screen-game.vercel.app",
+    githubUrl: "https://github.com/ryouy/screen_game",
+    featured: true
+  },
+  {
+    title: "Window-Light Cipher City",
+    description:
+      "A night-city puzzle about switching linked windows and decoding the secrets hidden in their lights.",
+    details: [
+      "Each move flips a window and its connected neighbors, gradually revealing patterns and clues across eight data-driven stages.",
+      "Investigations add conversations and records to a notebook, blending a light-switching logic puzzle with a small urban mystery.",
+      "Undo, redo, hints, keyboard and touch controls, persistent progress, and reachability tests support a polished play experience across screen sizes."
+    ],
+    category: "Game",
+    tech: ["React", "TypeScript", "Vite", "Vitest", "Local Storage"],
+    appUrl: "https://window-game.vercel.app",
+    githubUrl: "https://github.com/ryouy/window_game",
+    featured: true
+  },
+  {
+    title: "Azusagawa Letter",
+    description:
+      "A story puzzle about guiding a letter from the Northern Alps to Azumino through water, weather, time, and careful wrapping.",
+    details: [
+      "Players study clues in the landscape, choose packaging and attachments, then select a time, weather condition, and waterway before sending the letter downstream.",
+      "Eight stages use deterministic route rules and visible delivery paths, letting failed attempts become information for the next plan.",
+      "Its picture-book and old-map visual language is paired with keyboard support, reduced-motion and high-contrast modes, persistent progress, and end-to-end checks."
+    ],
+    category: "Game",
+    tech: ["React", "TypeScript", "Vite", "SVG", "Vitest"],
+    appUrl: "https://game-letter-flow.vercel.app",
+    githubUrl: "https://github.com/ryouy/game_letter",
+    featured: true
+  },
+  {
+    title: "Azumino Mountain Time",
+    description:
+      "A scoreless interactive landscape for quietly watching Azumino's fields and the Northern Alps change with time and weather.",
+    details: [
+      "The sky, mountains, and rice fields move continuously from morning into night across four seasons and conditions including mist, rain, snow, moonlight, and alpenglow.",
+      "Six viewpoints, rippling water, birds, clouds, and procedural Web Audio ambience create a place to observe rather than a goal to complete.",
+      "Favorite scenes can be restored later, while the interface fades away completely so the landscape, responsive controls, and low-motion option remain at the center."
+    ],
+    category: "Experiment",
+    tech: ["React", "TypeScript", "Vite", "Web Audio API", "CSS"],
+    appUrl: "https://game-scenery.vercel.app",
+    githubUrl: "https://github.com/ryouy/game_scenery",
+    featured: true
+  },
+  {
+    title: "Cloudsea Path",
+    description:
+      "A mountain-observation puzzle where light, wind, cloud height, and temperature determine whether a safe route can be seen.",
+    details: [
+      "Across eight fictional mountain stages, players tune environmental instruments, record visible landmarks, reject deceptive routes, and wait for stable visibility before moving.",
+      "Continuous visibility calculations make the illustrated landscape respond to every adjustment, turning observation into the main puzzle mechanic instead of simple trial and error.",
+      "A field notebook, progressive hints, undo, topographic view, checklists, responsive keyboard controls, and tested route logic support the expedition from start to finish."
+    ],
+    category: "Game",
+    tech: ["React", "TypeScript", "Vite", "Vitest", "Playwright"],
+    appUrl: "https://game-cloudsea-view.vercel.app/",
+    githubUrl: "https://github.com/ryouy/game_cloudsea",
+    featured: true
+  },
+  {
     title: "Audio Intelligence",
     description:
       "A Streamlit app that turns YouTube videos and uploaded audio into acoustic, linguistic, and semantic insights.",

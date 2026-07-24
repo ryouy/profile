@@ -9,8 +9,36 @@ const normalizeAngle = (angle: number) => {
   return normalized > 180 ? normalized - 360 : normalized;
 };
 
-const stepAngle = 360 / projects.length;
-const denseOrbit = projects.length > 10;
+const hashTitle = (title: string) => {
+  return Array.from(title).reduce((hash, character) => (hash * 31 + character.charCodeAt(0)) >>> 0, 2166136261);
+};
+
+const orbitProjects = [...projects].sort((first, second) => hashTitle(first.title) - hashTitle(second.title));
+const orbitLayout = orbitProjects.map((project, index) => {
+  const hash = hashTitle(project.title);
+
+  return {
+    project,
+    lane: index % 4,
+    angleOffset: ((hash >>> 8) % 13) - 6,
+    radiusOffset: ((hash >>> 16) % 13) - 6,
+  };
+});
+const stepAngle = 360 / orbitProjects.length;
+
+const getSnapTarget = (rotation: number) => {
+  const nearest = orbitLayout.reduce(
+    (active, item, index) => {
+      const angle = normalizeAngle(index * stepAngle + item.angleOffset + rotation);
+      const distance = Math.abs(angle);
+      return distance < active.distance ? { index, distance } : active;
+    },
+    { index: 0, distance: Number.POSITIVE_INFINITY }
+  );
+  const itemAngle = nearest.index * stepAngle + orbitLayout[nearest.index].angleOffset;
+
+  return rotation + normalizeAngle(-itemAngle - rotation);
+};
 
 function ProjectActions({ project }: { project: Project }) {
   return (
@@ -54,10 +82,10 @@ export function Projects() {
   const [isDragging, setIsDragging] = useState(false);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
   const [orbitMetrics, setOrbitMetrics] = useState({
-    cardWidth: 128,
-    innerSize: 120,
-    orbitRadius: 86,
-    innerOrbitRadius: 70,
+    cardWidth: 36,
+    innerSize: 80,
+    laneRadii: [112, 91, 70, 49],
+    compact: true,
   });
   const dragStart = useRef<{ x: number; y: number; rotation: number } | null>(null);
   const dragMeta = useRef({ lastX: 0, lastTime: 0, velocity: 0, moved: false });
@@ -116,7 +144,7 @@ export function Projects() {
       setRotationValue(next);
 
       if (Math.abs(velocity) < 0.015) {
-        animateTo(Math.round(rotationRef.current / stepAngle) * stepAngle);
+        animateTo(getSnapTarget(rotationRef.current));
         return;
       }
 
@@ -143,20 +171,21 @@ export function Projects() {
 
       if (!isCompact) {
         setOrbitMetrics({
-          cardWidth: denseOrbit ? 168 : 192,
-          innerSize: 176,
-          orbitRadius: 216,
-          innerOrbitRadius: 162,
+          cardWidth: 124,
+          innerSize: 108,
+          laneRadii: [234, 190, 146, 102],
+          compact: false,
         });
         return;
       }
 
-      const cardWidth = denseOrbit ? 112 : 128;
-      const orbitRadius = Math.max(84, Math.min(rect.width, rect.height) / 2 - cardWidth / 2 - 18);
-      const innerOrbitRadius = Math.max(64, orbitRadius - 28);
-      const innerSize = 116;
+      const cardWidth = 36;
+      const outerRadius = Math.max(94, Math.min(rect.width, rect.height) / 2 - cardWidth / 2 - 10);
+      const laneGap = Math.max(18, (outerRadius - 50) / 3);
+      const laneRadii = [0, 1, 2, 3].map((lane) => outerRadius - laneGap * lane);
+      const innerSize = 80;
 
-      setOrbitMetrics({ cardWidth, innerSize, orbitRadius, innerOrbitRadius });
+      setOrbitMetrics({ cardWidth, innerSize, laneRadii, compact: true });
     };
 
     updateMetrics();
@@ -193,9 +222,9 @@ export function Projects() {
   }, [isDragging, lastInteraction]);
 
   const activeIndex = useMemo(() => {
-    return projects.reduce(
-      (active, _project, index) => {
-        const angle = normalizeAngle((index * 360) / projects.length + rotation);
+    return orbitLayout.reduce(
+      (active, item, index) => {
+        const angle = normalizeAngle(index * stepAngle + item.angleOffset + rotation);
         const distance = Math.abs(angle);
         return distance < active.distance ? { index, distance } : active;
       },
@@ -203,11 +232,11 @@ export function Projects() {
     ).index;
   }, [rotation]);
 
-  const activeProject = projects[activeIndex];
+  const activeProject = orbitLayout[activeIndex].project;
 
   const selectProject = (index: number) => {
     markInteraction();
-    const baseAngle = index * stepAngle;
+    const baseAngle = index * stepAngle + orbitLayout[index].angleOffset;
     const current = rotationRef.current;
     const target = current + normalizeAngle(-baseAngle - current);
     animateTo(target);
@@ -228,7 +257,7 @@ export function Projects() {
       <div className="grid items-stretch gap-6 lg:grid-cols-[1.18fr_0.82fr]">
         <div
           ref={orbitPanelRef}
-          className="relative h-[24rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#050608] touch-none select-none sm:h-[32rem] lg:h-[34rem]"
+          className="relative h-[28rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#050608] touch-none select-none sm:h-[34rem] lg:h-[36rem]"
           onPointerDown={(event) => {
             markInteraction();
             pressedProjectIndex.current = getProjectIndexAtPoint(event.clientX, event.clientY);
@@ -281,34 +310,35 @@ export function Projects() {
             dragStart.current = null;
             setIsDragging(false);
             pressedProjectIndex.current = null;
-            animateTo(Math.round(rotationRef.current / stepAngle) * stepAngle);
+            animateTo(getSnapTarget(rotationRef.current));
           }}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_22%,rgba(255,255,255,0.18)_0_1px,transparent_1.5px),radial-gradient(circle_at_72%_28%,rgba(0,212,255,0.22)_0_1px,transparent_1.5px),radial-gradient(circle_at_62%_76%,rgba(255,255,255,0.12)_0_1px,transparent_1.5px),radial-gradient(circle_at_18%_72%,rgba(0,255,136,0.16)_0_1px,transparent_1.5px)] opacity-70" />
-          <div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/10 shadow-[0_0_80px_rgba(0,212,255,0.08)]"
-            style={{ height: orbitMetrics.orbitRadius * 2, width: orbitMetrics.orbitRadius * 2 }}
-          />
-          <div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accentSecondary/10"
-            style={{ height: orbitMetrics.innerOrbitRadius * 2, width: orbitMetrics.innerOrbitRadius * 2 }}
-          />
+          {orbitMetrics.laneRadii.map((radius, index) => (
+            <div
+              key={index}
+              className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border ${
+                index % 2 === 0 ? "border-accent/10" : "border-accentSecondary/10"
+              } ${index === 0 ? "shadow-[0_0_80px_rgba(0,212,255,0.08)]" : ""}`}
+              style={{ height: radius * 2, width: radius * 2 }}
+            />
+          ))}
           <div className="absolute inset-8 rounded-full bg-[radial-gradient(circle,rgba(0,255,136,0.10)_0%,transparent_34%,rgba(0,212,255,0.06)_45%,transparent_66%)]" />
           <div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/20 bg-[#050505]/95 shadow-[0_0_70px_rgba(0,255,136,0.16),inset_0_0_28px_rgba(0,212,255,0.06)]"
+            className="absolute left-1/2 top-1/2 z-[110] -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/20 bg-[#050505]/95 shadow-[0_0_70px_rgba(0,255,136,0.16),inset_0_0_28px_rgba(0,212,255,0.06)]"
             style={{ height: orbitMetrics.innerSize, width: orbitMetrics.innerSize }}
           >
-            <div className="flex h-full flex-col items-center justify-center px-5 text-center">
-              <p className="text-xs font-semibold leading-5 text-text sm:text-sm">{activeProject.title}</p>
+            <div className="flex h-full flex-col items-center justify-center px-3 text-center sm:px-5">
+              <p className="text-[10px] font-semibold leading-4 text-text sm:text-xs sm:leading-5">{activeProject.title}</p>
             </div>
           </div>
 
-          {projects.map((project, index) => {
-            const baseAngle = index * stepAngle;
+          {orbitLayout.map(({ project, lane, angleOffset, radiusOffset }, index) => {
+            const baseAngle = index * stepAngle + angleOffset;
             const angle = normalizeAngle(baseAngle + rotation);
             const radians = (angle * Math.PI) / 180;
             const depth = (Math.cos(radians) + 1) / 2;
-            const laneRadius = denseOrbit && index % 2 === 1 ? orbitMetrics.innerOrbitRadius : orbitMetrics.orbitRadius;
+            const laneRadius = orbitMetrics.laneRadii[lane] + radiusOffset;
             const x = Math.sin(radians) * laneRadius;
             const y = Math.cos(radians) * laneRadius;
             const isActive = index === activeIndex;
@@ -318,19 +348,29 @@ export function Projects() {
                 key={project.title}
                 type="button"
                 data-project-index={index}
-                className={`absolute left-1/2 top-1/2 rounded-2xl border bg-surface/95 p-3 text-left shadow-lg backdrop-blur ${
+                aria-label={project.title}
+                title={project.title}
+                className={`absolute left-1/2 top-1/2 border bg-surface/95 shadow-lg backdrop-blur ${
+                  orbitMetrics.compact
+                    ? "flex items-center justify-center rounded-full p-0"
+                    : "rounded-xl p-2 text-left"
+                } ${
                   isDragging ? "cursor-grabbing" : "cursor-grab transition-[transform,opacity,border-color] duration-300 ease-out"
                 }`}
                 style={{
                   borderColor: isActive ? "#00ff88" : "#262626",
-                  opacity: 0.28 + depth * 0.72,
+                  height: orbitMetrics.compact ? orbitMetrics.cardWidth : undefined,
+                  opacity: 0.34 + depth * 0.66,
                   width: orbitMetrics.cardWidth,
-                  transform: `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${0.68 + depth * 0.28})`,
+                  transform: `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${0.62 + depth * 0.3})`,
                   zIndex: Math.round(depth * 100),
                 }}
               >
-                <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">{project.category}</span>
-                <span className="mt-2 block text-xs font-semibold leading-5 text-text sm:text-sm">{project.title}</span>
+                {orbitMetrics.compact ? (
+                  <span className={`h-2 w-2 rounded-full ${isActive ? "bg-accent" : "bg-muted"}`} />
+                ) : (
+                  <span className="line-clamp-2 block text-[11px] font-semibold leading-4 text-text">{project.title}</span>
+                )}
               </button>
             );
           })}
@@ -347,7 +387,7 @@ export function Projects() {
                 onChange={(event) => selectProject(Number(event.target.value))}
                 className="h-11 w-full appearance-none rounded-xl border border-border bg-[#080808] px-4 pr-10 text-sm font-medium text-text outline-none transition hover:border-accent focus:border-accent"
               >
-                {projects.map((project, index) => (
+                {orbitProjects.map((project, index) => (
                   <option key={project.title} value={index}>
                     {project.title}
                   </option>
