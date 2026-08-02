@@ -80,6 +80,8 @@ function TechTags({ tech }: { tech: string[] }) {
 export function Projects() {
   const [rotation, setRotation] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isProjectSelectActive, setIsProjectSelectActive] = useState(false);
+  const [lockedProjectIndex, setLockedProjectIndex] = useState<number | null>(null);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
   const [orbitMetrics, setOrbitMetrics] = useState({
     cardWidth: 36,
@@ -95,6 +97,7 @@ export function Projects() {
   const idleFrame = useRef<number | null>(null);
   const lastIdleTick = useRef<number | null>(null);
   const orbitPanelRef = useRef<HTMLDivElement | null>(null);
+  const projectSelectActiveRef = useRef(false);
 
   const setRotationValue = (value: number) => {
     rotationRef.current = value;
@@ -102,7 +105,7 @@ export function Projects() {
   };
 
   const stopAnimation = () => {
-    if (animationFrame.current) {
+    if (animationFrame.current !== null) {
       cancelAnimationFrame(animationFrame.current);
       animationFrame.current = null;
     }
@@ -113,7 +116,7 @@ export function Projects() {
     lastIdleTick.current = null;
   };
 
-  const animateTo = (target: number) => {
+  const animateTo = (target: number, onComplete?: () => void) => {
     stopAnimation();
 
     const tick = () => {
@@ -123,6 +126,7 @@ export function Projects() {
       if (Math.abs(target - next) < 0.08) {
         setRotationValue(target);
         animationFrame.current = null;
+        onComplete?.();
         return;
       }
 
@@ -200,9 +204,9 @@ export function Projects() {
     const tick = (time: number) => {
       const idleFor = Date.now() - lastInteraction;
 
-      if (!isDragging && !animationFrame.current && idleFor > 4200) {
+      if (!isDragging && !isProjectSelectActive && animationFrame.current === null && idleFor > 4200) {
         const previous = lastIdleTick.current ?? time;
-        const elapsed = time - previous;
+        const elapsed = Math.min(time - previous, 32);
         lastIdleTick.current = time;
         setRotationValue(rotationRef.current + elapsed * 0.004);
       } else {
@@ -219,7 +223,7 @@ export function Projects() {
         cancelAnimationFrame(idleFrame.current);
       }
     };
-  }, [isDragging, lastInteraction]);
+  }, [isDragging, isProjectSelectActive, lastInteraction]);
 
   const activeIndex = useMemo(() => {
     return orbitLayout.reduce(
@@ -232,14 +236,42 @@ export function Projects() {
     ).index;
   }, [rotation]);
 
-  const activeProject = orbitLayout[activeIndex].project;
+  const displayedProjectIndex = lockedProjectIndex ?? activeIndex;
+  const activeProject = orbitLayout[displayedProjectIndex].project;
 
   const selectProject = (index: number) => {
+    if (!Number.isInteger(index) || index < 0 || index >= orbitLayout.length) {
+      return;
+    }
+
     markInteraction();
+    setLockedProjectIndex(index);
     const baseAngle = index * stepAngle + orbitLayout[index].angleOffset;
     const current = rotationRef.current;
     const target = current + normalizeAngle(-baseAngle - current);
-    animateTo(target);
+    animateTo(target, () => {
+      if (!projectSelectActiveRef.current) {
+        setLockedProjectIndex(null);
+      }
+    });
+  };
+
+  const beginProjectSelectInteraction = () => {
+    projectSelectActiveRef.current = true;
+    setIsProjectSelectActive(true);
+    setLockedProjectIndex((current) => current ?? activeIndex);
+    stopAnimation();
+    markInteraction();
+  };
+
+  const endProjectSelectInteraction = () => {
+    projectSelectActiveRef.current = false;
+    setIsProjectSelectActive(false);
+    markInteraction();
+
+    if (animationFrame.current === null) {
+      setLockedProjectIndex(null);
+    }
   };
 
   const getProjectIndexAtPoint = (x: number, y: number) => {
@@ -260,6 +292,7 @@ export function Projects() {
           className="relative h-[28rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#050608] touch-none select-none sm:h-[34rem] lg:h-[36rem]"
           onPointerDown={(event) => {
             markInteraction();
+            setLockedProjectIndex(null);
             pressedProjectIndex.current = getProjectIndexAtPoint(event.clientX, event.clientY);
             stopAnimation();
             setIsDragging(true);
@@ -341,7 +374,7 @@ export function Projects() {
             const laneRadius = orbitMetrics.laneRadii[lane] + radiusOffset;
             const x = Math.sin(radians) * laneRadius;
             const y = Math.cos(radians) * laneRadius;
-            const isActive = index === activeIndex;
+            const isActive = index === displayedProjectIndex;
 
             return (
               <button
@@ -383,7 +416,10 @@ export function Projects() {
             </span>
             <div className="relative">
               <select
-                value={activeIndex}
+                value={displayedProjectIndex}
+                onPointerDown={beginProjectSelectInteraction}
+                onFocus={beginProjectSelectInteraction}
+                onBlur={endProjectSelectInteraction}
                 onChange={(event) => selectProject(Number(event.target.value))}
                 className="h-11 w-full appearance-none rounded-xl border border-border bg-[#080808] px-4 pr-10 text-sm font-medium text-text outline-none transition hover:border-accent focus:border-accent"
               >
