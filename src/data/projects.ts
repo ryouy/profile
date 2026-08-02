@@ -295,20 +295,6 @@ export const projects: Project[] = [
     featured: false
   },
   {
-    title: "Graduation Thesis",
-    description:
-      "A research-oriented repository connected to graduation thesis work in data science.",
-    details: [
-      "This repository is a place for thesis-related experiments, notebooks, and analysis work rather than a polished public app.",
-      "It represents the research side of my portfolio: asking questions, testing methods, and organizing data-driven investigation in a reproducible way."
-    ],
-    category: "Research",
-    tech: ["Jupyter Notebook", "Data Science", "Research"],
-    appUrl: "",
-    githubUrl: "https://github.com/ryouy/GraduationThesis",
-    featured: false
-  },
-  {
     title: "LineChatViewer",
     description:
       "A TypeScript project for viewing and working with LINE chat-style data.",
@@ -320,6 +306,21 @@ export const projects: Project[] = [
     tech: ["TypeScript"],
     appUrl: "https://line-chat-viewer.vercel.app",
     githubUrl: "https://github.com/ryouy/LineChatViewer",
+    featured: false
+  },
+  {
+    title: "Simple Pomodoro",
+    description:
+      "A customizable Chrome extension for moving smoothly between focused work sessions and restorative breaks.",
+    details: [
+      "The extension lets users tailor work and break durations, session counts, alarm sounds, color themes, automatic transitions, notifications, and skipping to match their own focus rhythm.",
+      "Its timer continues after the popup closes, while preferences and session state stay entirely within the browser for a dependable, privacy-friendly workflow.",
+      "A companion web version shares the same lightweight interface, making the core Pomodoro experience available beyond the extension popup."
+    ],
+    category: "Tool",
+    tech: ["JavaScript", "Chrome Extension", "Manifest V3", "HTML", "CSS"],
+    appUrl: "https://pomodoro-chrome-extension.vercel.app/",
+    githubUrl: "https://github.com/ryouy/pomodoro-chrome-extension",
     featured: false
   }
 ];
