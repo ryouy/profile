@@ -309,6 +309,81 @@ export const projects: Project[] = [
     featured: false
   },
   {
+    title: "Yahoo Shorts Studio",
+    description:
+      "A local production studio that turns Yahoo! JAPAN News articles and comments into narrated vertical videos.",
+    details: [
+      "The workflow brings article discovery, comment collection, AI-assisted script writing, human editing and approval, text-to-speech, thumbnails, and vertical video rendering into one resumable browser app.",
+      "FastAPI, React, and SQLite replace an earlier notebook pipeline, while job history and per-article retries make long-running production work easier to recover and manage.",
+      "OpenAI Structured Outputs, browser automation, edge-tts, and ffmpeg support the path from a selected story to an exported MP4 and project archive."
+    ],
+    category: "Tool",
+    tech: ["Python", "FastAPI", "React", "SQLite", "OpenAI API", "ffmpeg"],
+    appUrl: "",
+    githubUrl: "https://github.com/ryouy/yahoo2shorts",
+    featured: false
+  },
+  {
+    title: "heic2jpg",
+    description:
+      "A macOS toolkit for organizing Google Takeout media while converting HEIC photos and preserving useful metadata.",
+    details: [
+      "The scripts collect HEIC, JPG, PNG, and video files into one folder, prefer existing JPG copies, convert HEIC-only photos, and merge capture time and GPS data from Google Photos sidecar JSON files.",
+      "Additional commands rename images by capture time, compress JPEGs toward a target size, and optionally reduce dimensions when quality changes alone are not enough.",
+      "The workflow uses macOS sips and ExifTool to keep a large photo export practical without discarding the metadata needed to sort and revisit it."
+    ],
+    category: "Tool",
+    tech: ["Python", "ExifTool", "sips", "Pillow", "Google Takeout"],
+    appUrl: "",
+    githubUrl: "https://github.com/ryouy/heic2jpg",
+    featured: false
+  },
+  {
+    title: "AI News Reader",
+    description:
+      "A small AI-first news reader that filters the feed before it reaches the reader instead of adding more content.",
+    details: [
+      "Articles from Yahoo! JAPAN News are evaluated for relevance, importance, and usefulness so gossip, sensational stories, and clickbait can be removed before the feed is shown.",
+      "Each selected item includes a short summary and a reason for appearing, while natural-language preferences and local browsing history shape the experience.",
+      "A deliberate ten-story daily limit keeps the interface focused on controlling information intake rather than encouraging endless scrolling."
+    ],
+    category: "Web App",
+    tech: ["Next.js", "React", "TypeScript", "OpenAI API", "Local Storage"],
+    appUrl: "https://anr-ryouy.vercel.app/",
+    githubUrl: "https://github.com/ryouy/ANR",
+    featured: false
+  },
+  {
+    title: "Hakuhodo 24",
+    description:
+      "A Google Colab pipeline that analyzes presentation material and develops it into a new IT service proposal for students.",
+    details: [
+      "The notebook combines PDF slide images and PowerPoint text for multimodal analysis, then asks generated student personas to discuss problems, common needs, and possible solutions.",
+      "The resulting service concept is structured as JSON and expanded into generated proposal imagery and a Marp Markdown presentation.",
+      "It connects document understanding, persona-led ideation, and proposal production in a single reproducible notebook workflow."
+    ],
+    category: "Research",
+    tech: ["Python", "Jupyter", "Google Colab", "OpenAI API", "Marp"],
+    appUrl: "",
+    githubUrl: "https://github.com/ryouy/hakuhodo-24",
+    featured: false
+  },
+  {
+    title: "Kaki Talk Demo",
+    description:
+      "An AI conversation demo where an old persimmon tree responds through its own personality, senses, and memory of care.",
+    details: [
+      "Users can talk with the tree, water it, or clear weeds while temperature, humidity, soil moisture, and light change how the illustrated character looks and speaks.",
+      "The tree persona, recent conversation, environmental readings, and care history are assembled into the model context so responses remain grounded in the character's physical point of view.",
+      "Local storage preserves the simulated tree state and chat history, creating a compact experiment in giving a living environment an AI interface."
+    ],
+    category: "Experiment",
+    tech: ["Next.js", "React", "TypeScript", "OpenAI API", "Local Storage"],
+    appUrl: "https://kaki-talk-demo.vercel.app",
+    githubUrl: "https://github.com/ryouy/kaki-talk-demo",
+    featured: false
+  },
+  {
     title: "Simple Pomodoro",
     description:
       "A customizable Chrome extension for moving smoothly between focused work sessions and restorative breaks.",
