@@ -11,6 +11,147 @@ export type Project = {
 
 export const projects: Project[] = [
   {
+    title: "English as Code",
+    description:
+      "An English-learning tool that visualizes grammar as programming-style expressions while preserving the original words.",
+    details: [
+      "A deterministic tokenizer and parser build a syntax tree, with Simple, Structure, and Grammar views plus a word-level inspector.",
+      "The rule-based engine handles constructions including passives and relative clauses; hundreds of golden-corpus test cases support regression testing."
+    ],
+    category: "Tool",
+    tech: ["TypeScript", "Express", "JavaScript", "AST", "Parsing"],
+    appUrl: "https://english-as-code-indol.vercel.app/",
+    githubUrl: "https://github.com/ryouy/English_as_Code",
+    featured: true
+  },
+  {
+    title: "Tiny City Sites",
+    description:
+      "Student-led small-business website design with ten distinct fictional shop demos.",
+    details: [
+      "The portfolio showcases approachable website design for local restaurants, cafés, and independent stores, with individual concepts for ten businesses.",
+      "Each demo is an independent Astro site; a shared build pipeline bundles them into one deployable showcase."
+    ],
+    category: "Web App",
+    tech: ["Astro", "JavaScript", "CSS", "Vercel"],
+    appUrl: "https://tiny-city-sites.vercel.app/",
+    githubUrl: "https://github.com/ryouy/tiny-city-sites",
+    featured: true
+  },
+  {
+    title: "Shaberu Kakinoki",
+    description:
+      "A mobile-first prototype for collectively looking after a playful persimmon-tree character.",
+    details: [
+      "Eight-question diagnosis, timed watering missions, quizzes, rankings, badges, and a reviewable administration screen demonstrate the product flow.",
+      "Weather and tree conditions are simulated; progress is saved in local storage, without live AI, sensors, shared databases, or authentication."
+    ],
+    category: "Web App",
+    tech: ["HTML", "CSS", "JavaScript", "Local Storage"],
+    appUrl: "https://shabe-kaki.vercel.app",
+    githubUrl: "https://github.com/ryouy/shabe-kaki",
+    featured: true
+  },
+  {
+    title: "University of Aizu Admissions Explorer",
+    description:
+      "An interactive visualization of enrollment by Japanese prefecture at the University of Aizu.",
+    details: [
+      "The dataset contains prefecture-level admissions across academic years 2016–2026, including an eleven-year total.",
+      "Vite and Plotly.js turn the CSV into a visual explorer for comparing the university's geographic intake over time."
+    ],
+    category: "Data Visualization",
+    tech: ["Vite", "JavaScript", "Plotly.js", "CSV"],
+    appUrl: "",
+    githubUrl: "https://github.com/ryouy/UoA_admin_stats",
+    featured: true
+  },
+  {
+    title: "KAKI LINK",
+    description:
+      "An IoT- and AI-inspired concept app for shared persimmon orchard management.",
+    details: [
+      "The demo combines tree status, watering, growth logs, reservations, shared management, community chat, and reward points.",
+      "Automatic watering, cameras, and the AI persimmon character are demonstrated as product concepts rather than claims of deployed orchard hardware."
+    ],
+    category: "Web App",
+    tech: ["Web App", "IoT Concept", "AI Chat", "Prototype"],
+    appUrl: "https://ryouy.github.io/kaki-link/",
+    githubUrl: "https://github.com/ryouy/kaki-link",
+    featured: true
+  },
+  {
+    title: "Mechanistic Interpretability Research",
+    description:
+      "An undergraduate thesis workspace investigating how internal language-model states evolve through reasoning.",
+    details: [
+      "Experiments study hidden-state trajectories and concept activation under negation, replacement, and other prompting conditions with open-weight language models.",
+      "Research in progress examines attractors, self-loops, and activation steering through notebooks, layerwise analyses, and model probes."
+    ],
+    category: "Research",
+    tech: ["Python", "PyTorch", "Transformers", "Qwen", "Jupyter"],
+    appUrl: "",
+    githubUrl: "https://github.com/ryouy/GraduationThesis",
+    featured: true
+  },
+  {
+    title: "Personalized TV Viewing Prediction",
+    description:
+      "A machine-learning prototype predicting an individual's viewing interest from behavioral context and media content.",
+    details: [
+      "The project combines smartphone step history and weather with a model of whether a person is at home.",
+      "Search-history text and transcribed advertisement content are compared using TF–IDF and cosine similarity, complementing a Random Forest predictor."
+    ],
+    category: "Research",
+    tech: ["Python", "scikit-learn", "Whisper", "TF–IDF"],
+    appUrl: "",
+    githubUrl: "https://github.com/ryouy/Hakuhodo_ChatGPT",
+    featured: false
+  },
+  {
+    title: "MapChart for Swift",
+    description:
+      "A native Apple-platform prototype exploring interactive chart rendering and custom graphics.",
+    details: [
+      "An Xcode application exercises graph drawing, view management, and chart interactions in Swift.",
+      "Test targets accompany the learning-oriented iOS/macOS graphics experiments; it is not presented as a released charting library."
+    ],
+    category: "Experiment",
+    tech: ["Swift", "Xcode", "CoreGraphics", "iOS"],
+    appUrl: "",
+    githubUrl: "https://github.com/ryouy/MapChart",
+    featured: false
+  },
+  {
+    title: "Flutter Development Training",
+    description:
+      "A collection of Flutter mobile application samples created during training in Da Nang.",
+    details: [
+      "The repository documents practice with Flutter layouts, state management, navigation, and platform-specific integration.",
+      "It contains multiple learning projects for Android and iOS rather than one released consumer application."
+    ],
+    category: "Experiment",
+    tech: ["Flutter", "Dart", "Android", "iOS"],
+    appUrl: "",
+    githubUrl: "https://github.com/ryouy/Flutter-Training",
+    featured: false
+  },
+  {
+    title: "Computer Graphics Exercises",
+    description:
+      "Programming exercises exploring core graphics concepts, including 3D viewing and geometric rendering.",
+    details: [
+      "The coursework repository includes random-walk triangle experiments and three-dimensional viewing exercises.",
+      "Result write-ups and implementations document practical learning in rendering and visualization."
+    ],
+    category: "Experiment",
+    tech: ["Computer Graphics", "3D", "Rendering", "Coursework"],
+    appUrl: "",
+    githubUrl: "https://github.com/ryouy/CG_exercises",
+    featured: false
+  },
+
+  {
     title: "Viewport City",
     description:
       "A browser puzzle where window size, scrolling, zoom, and tab visibility become the physical laws of a city.",
