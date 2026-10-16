@@ -389,6 +389,8 @@ export function Projects() {
             const x = Math.sin(radians) * laneRadius;
             const y = Math.cos(radians) * laneRadius;
             const isActive = index === displayedProjectIndex;
+            const isCompactNode = orbitMetrics.compact || (orbitProjects.length > 30 && lane >= 2);
+            const nodeWidth = isCompactNode ? (orbitMetrics.compact ? orbitMetrics.cardWidth : 40) : orbitMetrics.cardWidth;
 
             return (
               <button
@@ -398,7 +400,7 @@ export function Projects() {
                 aria-label={project.title}
                 title={project.title}
                 className={`absolute left-1/2 top-1/2 border bg-surface/95 shadow-lg backdrop-blur ${
-                  orbitMetrics.compact
+                  isCompactNode
                     ? "flex items-center justify-center rounded-full p-0"
                     : "rounded-xl p-2 text-left"
                 } ${
@@ -406,14 +408,14 @@ export function Projects() {
                 }`}
                 style={{
                   borderColor: isActive ? "#00ff88" : "#262626",
-                  height: orbitMetrics.compact ? orbitMetrics.cardWidth : undefined,
+                  height: isCompactNode ? nodeWidth : undefined,
                   opacity: 0.34 + depth * 0.66,
-                  width: orbitMetrics.cardWidth,
+                  width: nodeWidth,
                   transform: `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${0.62 + depth * 0.3})`,
                   zIndex: Math.round(depth * 100),
                 }}
               >
-                {orbitMetrics.compact ? (
+                {isCompactNode ? (
                   <span className={`h-2 w-2 rounded-full ${isActive ? "bg-accent" : "bg-muted"}`} />
                 ) : (
                   <span className="line-clamp-2 block text-[11px] font-semibold leading-4 text-text">{project.title}</span>
