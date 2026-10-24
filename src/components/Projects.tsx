@@ -82,6 +82,8 @@ function TechTags({ tech }: { tech: string[] }) {
 export function Projects() {
   const [rotation, setRotation] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(true);
+  const [rotationPaused, setRotationPaused] = useState(false);
+  const engagement = useRef({ hover: false, focus: false });
   const [isDragging, setIsDragging] = useState(false);
   const [lockedProjectIndex, setLockedProjectIndex] = useState<number | null>(null);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
@@ -238,7 +240,7 @@ export function Projects() {
     const tick = (time: number) => {
       const idleFor = Date.now() - lastInteraction;
 
-      if (!reducedMotion && !isDragging && !projectSelectActiveRef.current && animationFrame.current === null && idleFor > 4200) {
+      if (!reducedMotion && !rotationPaused && !engagement.current.hover && !engagement.current.focus && !document.hidden && !isDragging && !projectSelectActiveRef.current && animationFrame.current === null && idleFor > 4200) {
         const previous = lastIdleTick.current ?? time;
         const elapsed = Math.min(time - previous, 32);
         lastIdleTick.current = time;
@@ -257,7 +259,7 @@ export function Projects() {
         cancelAnimationFrame(idleFrame.current);
       }
     };
-  }, [isDragging, lastInteraction, reducedMotion]);
+  }, [isDragging, lastInteraction, reducedMotion, rotationPaused]);
 
   const activeIndex = useMemo(() => {
     return orbitLayout.reduce(
@@ -322,8 +324,24 @@ export function Projects() {
   };
 
   return (
-    <section id="projects" className="py-16 sm:py-20">
+    <section id="projects" className="py-16 sm:py-20"
+      onMouseEnter={() => { engagement.current.hover = true; }}
+      onMouseLeave={() => { engagement.current.hover = false; markInteraction(); }}
+      onFocusCapture={() => { engagement.current.focus = true; }}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          engagement.current.focus = false;
+          markInteraction();
+        }
+      }}
+    >
       <SectionHeader eyebrow="<playground />" title="Project Playground" />
+      <button type="button" aria-pressed={rotationPaused} disabled={reducedMotion}
+        className="mb-5 rounded-lg border border-border px-3 py-2 text-sm text-muted hover:border-accent disabled:opacity-60"
+        onClick={() => { stopAnimation(); setRotationPaused((paused) => !paused); markInteraction(); }}
+      >
+        {reducedMotion ? "Rotation off" : rotationPaused ? "Resume rotation" : "Pause rotation"}
+      </button>
 
       <div className="grid items-stretch gap-6 lg:grid-cols-[1.18fr_0.82fr]">
         <div
