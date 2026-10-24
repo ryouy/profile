@@ -66,9 +66,10 @@ section {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mountain-pan {
-    animation: none;
-  }
+  html { scroll-behavior: auto; }
+  .mountain-pan, .fade-up { animation: none; }
+  .card-hover { transition: none; }
+  .card-hover:hover { transform: none; }
 }
 
 .terminal-shadow {
