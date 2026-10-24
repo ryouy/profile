@@ -46,6 +46,7 @@ function ProjectActions({ project }: { project: Project }) {
       {project.appUrl ? (
         <a
           href={project.appUrl}
+          aria-label={`Open ${project.title} app (opens in a new tab)`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex min-h-9 items-center justify-center rounded-lg border border-accent/50 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent transition hover:bg-accent hover:text-[#041008]"
@@ -55,6 +56,7 @@ function ProjectActions({ project }: { project: Project }) {
       ) : null}
       <a
         href={project.githubUrl}
+        aria-label={`View ${project.title} source code (opens in a new tab)`}
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex min-h-9 items-center justify-center rounded-lg border border-border bg-[#0b0b0b] px-3 py-1.5 text-xs font-semibold text-text transition hover:border-accent hover:text-accent"
@@ -398,6 +400,11 @@ export function Projects() {
                 type="button"
                 data-project-index={index}
                 aria-label={project.title}
+                aria-pressed={isActive}
+                onClick={(event) => {
+                  // Pointer selection is handled once by the orbit's drag/tap handler.
+                  if (event.detail === 0) selectProject(index);
+                }}
                 title={project.title}
                 className={`absolute left-1/2 top-1/2 border bg-surface/95 shadow-lg backdrop-blur ${
                   isCompactNode
@@ -474,3 +481,4 @@ export function Projects() {
     </section>
   );
 }
+
