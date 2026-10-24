@@ -81,6 +81,7 @@ function TechTags({ tech }: { tech: string[] }) {
 
 export function Projects() {
   const [rotation, setRotation] = useState(0);
+  const [reducedMotion, setReducedMotion] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
   const [lockedProjectIndex, setLockedProjectIndex] = useState<number | null>(null);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
@@ -120,6 +121,12 @@ export function Projects() {
   const animateTo = (target: number, onComplete?: () => void) => {
     stopAnimation();
 
+    if (reducedMotion) {
+      setRotationValue(target);
+      onComplete?.();
+      return;
+    }
+
     const tick = () => {
       if (projectSelectActiveRef.current) {
         animationFrame.current = null;
@@ -146,6 +153,10 @@ export function Projects() {
   const glideAndSnap = (initialVelocity: number) => {
     stopAnimation();
 
+    if (reducedMotion) {
+      animateTo(getSnapTarget(rotationRef.current));
+      return;
+    }
     let velocity = initialVelocity;
 
     const tick = () => {
@@ -168,6 +179,18 @@ export function Projects() {
 
     animationFrame.current = requestAnimationFrame(tick);
   };
+
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => {
+      setReducedMotion(preference.matches);
+      if (preference.matches) stopAnimation();
+      lastIdleTick.current = null;
+    };
+    update();
+    preference.addEventListener("change", update);
+    return () => preference.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     return () => stopAnimation();
@@ -215,7 +238,7 @@ export function Projects() {
     const tick = (time: number) => {
       const idleFor = Date.now() - lastInteraction;
 
-      if (!isDragging && !projectSelectActiveRef.current && animationFrame.current === null && idleFor > 4200) {
+      if (!reducedMotion && !isDragging && !projectSelectActiveRef.current && animationFrame.current === null && idleFor > 4200) {
         const previous = lastIdleTick.current ?? time;
         const elapsed = Math.min(time - previous, 32);
         lastIdleTick.current = time;
@@ -234,7 +257,7 @@ export function Projects() {
         cancelAnimationFrame(idleFrame.current);
       }
     };
-  }, [isDragging, lastInteraction]);
+  }, [isDragging, lastInteraction, reducedMotion]);
 
   const activeIndex = useMemo(() => {
     return orbitLayout.reduce(
