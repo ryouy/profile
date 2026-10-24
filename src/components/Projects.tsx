@@ -93,7 +93,7 @@ export function Projects() {
     laneRadii: [112, 91, 70, 49],
     compact: true,
   });
-  const dragStart = useRef<{ x: number; y: number; rotation: number } | null>(null);
+  const dragStart = useRef<{ x: number; y: number; rotation: number; pointerId: number } | null>(null);
   const dragMeta = useRef({ lastX: 0, lastTime: 0, velocity: 0, moved: false });
   const pressedProjectIndex = useRef<number | null>(null);
   const rotationRef = useRef(0);
@@ -348,12 +348,13 @@ export function Projects() {
           ref={orbitPanelRef}
           className="relative h-[28rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#050608] touch-none select-none sm:h-[34rem] lg:h-[36rem]"
           onPointerDown={(event) => {
+            if (!event.isPrimary || event.button !== 0 || dragStart.current) return;
             markInteraction();
             setLockedProjectIndex(null);
             pressedProjectIndex.current = getProjectIndexAtPoint(event.clientX, event.clientY);
             stopAnimation();
             setIsDragging(true);
-            dragStart.current = { x: event.clientX, y: event.clientY, rotation };
+            dragStart.current = { x: event.clientX, y: event.clientY, rotation: rotationRef.current, pointerId: event.pointerId };
             dragMeta.current = {
               lastX: event.clientX,
               lastTime: performance.now(),
@@ -363,7 +364,7 @@ export function Projects() {
             event.currentTarget.setPointerCapture(event.pointerId);
           }}
           onPointerMove={(event) => {
-            if (!dragStart.current) {
+            if (!dragStart.current || dragStart.current.pointerId !== event.pointerId) {
               return;
             }
 
@@ -381,6 +382,7 @@ export function Projects() {
             setRotationValue(nextRotation);
           }}
           onPointerUp={(event) => {
+            if (!dragStart.current || dragStart.current.pointerId !== event.pointerId) return;
             const releasedProjectIndex = getProjectIndexAtPoint(event.clientX, event.clientY);
             const tappedProjectIndex = releasedProjectIndex ?? pressedProjectIndex.current;
 
@@ -396,10 +398,18 @@ export function Projects() {
               event.currentTarget.releasePointerCapture(event.pointerId);
             }
           }}
-          onPointerCancel={() => {
+          onPointerCancel={(event) => {
+            if (dragStart.current?.pointerId !== event.pointerId) return;
             dragStart.current = null;
             setIsDragging(false);
             pressedProjectIndex.current = null;
+            animateTo(getSnapTarget(rotationRef.current));
+          }}
+          onLostPointerCapture={(event) => {
+            if (dragStart.current?.pointerId !== event.pointerId) return;
+            dragStart.current = null;
+            pressedProjectIndex.current = null;
+            setIsDragging(false);
             animateTo(getSnapTarget(rotationRef.current));
           }}
         >
