@@ -24,6 +24,19 @@ function isValidSvg(body: string, contentType: string): boolean {
   return /^<svg(?:\s|>)/i.test(start);
 }
 
+// Function instances are reused when warm, so remember the most recently seen song
+// immediately. The GitHub snapshot is the durable fallback across cold starts.
+let lastPlayingSvg: string | null = null;
+
+function isPlayingTrack(svg: string): boolean {
+  const normalized = svg.toLowerCase();
+  return normalized.includes('class="artist">') &&
+    normalized.includes('class="song">') &&
+    !normalized.includes("currently not playing on spotify") &&
+    !normalized.includes("nothing playing on spotify") &&
+    !normalized.includes('class="artist">offline</div>');
+}
+
 async function fetchSvg(url: string, timeoutMs: number): Promise<string | null> {
   try {
     const response = await fetch(url, {
@@ -38,7 +51,7 @@ async function fetchSvg(url: string, timeoutMs: number): Promise<string | null> 
   }
 }
 
-function svgResponse(svg: string, source: "live" | "last-good" | "placeholder"): Response {
+function svgResponse(svg: string, source: "live" | "memory" | "last-good" | "placeholder"): Response {
   return new Response(svg, {
     status: 200,
     headers: {
@@ -53,10 +66,16 @@ function svgResponse(svg: string, source: "live" | "last-good" | "placeholder"):
 
 export async function GET(): Promise<Response> {
   const live = await fetchSvg(LIVE_URL, 6000);
-  if (live) return svgResponse(live, "live");
+  if (live && isPlayingTrack(live)) {
+    lastPlayingSvg = live;
+    return svgResponse(live, "live");
+  }
+
+  // An ad, pause or offline response never replaces a previously played song.
+  if (lastPlayingSvg) return svgResponse(lastPlayingSvg, "memory");
 
   const lastGood = await fetchSvg(LAST_GOOD_URL, 5000);
-  if (lastGood) return svgResponse(lastGood, "last-good");
+  if (lastGood && isPlayingTrack(lastGood)) return svgResponse(lastGood, "last-good");
 
   return svgResponse(PLACEHOLDER, "placeholder");
 }
