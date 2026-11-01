@@ -51,8 +51,24 @@ async function fetchSvg(url: string, timeoutMs: number): Promise<string | null> 
   }
 }
 
-function svgResponse(svg: string, source: "live" | "memory" | "last-good" | "placeholder"): Response {
-  return new Response(svg, {
+type CardMode = "light" | "dark";
+
+// The provider's default SVG fixes its text colors to white. Recolor the
+// actual SVG (including cached tracks) so light mode keeps readable contrast.
+function applyCardMode(svg: string, mode: CardMode): string {
+  if (mode === "dark") return svg;
+  return svg
+    .replace("background-color: #101b2b;", "background-color: #f6f8fa;")
+    .replace("color: #fff;", "color: #24292f;")
+    .replace("color: #b3b3b3;", "color: #57606a;")
+    .replace("color: #53b14f;", "color: #1a7f37;")
+    .replace('fill="#101b2b"', 'fill="#f6f8fa"')
+    .replace('fill="#f7fbff"', 'fill="#24292f"')
+    .replace('fill="#b6cadb"', 'fill="#57606a"');
+}
+
+function svgResponse(svg: string, source: "live" | "memory" | "last-good" | "placeholder", mode: CardMode): Response {
+  return new Response(applyCardMode(svg, mode), {
     status: 200,
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
@@ -60,22 +76,24 @@ function svgResponse(svg: string, source: "live" | "memory" | "last-good" | "pla
       "X-Content-Type-Options": "nosniff",
       "Content-Security-Policy": "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox",
       "X-Spotify-Card-Source": source,
+      "X-Spotify-Card-Mode": mode,
     },
   });
 }
 
-export async function GET(): Promise<Response> {
+export async function GET(request: Request): Promise<Response> {
+  const mode: CardMode = new URL(request.url).searchParams.get("mode") === "light" ? "light" : "dark";
   const live = await fetchSvg(LIVE_URL, 6000);
   if (live && isPlayingTrack(live)) {
     lastPlayingSvg = live;
-    return svgResponse(live, "live");
+    return svgResponse(live, "live", mode);
   }
 
   // An ad, pause or offline response never replaces a previously played song.
-  if (lastPlayingSvg) return svgResponse(lastPlayingSvg, "memory");
+  if (lastPlayingSvg) return svgResponse(lastPlayingSvg, "memory", mode);
 
   const lastGood = await fetchSvg(LAST_GOOD_URL, 5000);
-  if (lastGood && isPlayingTrack(lastGood)) return svgResponse(lastGood, "last-good");
+  if (lastGood && isPlayingTrack(lastGood)) return svgResponse(lastGood, "last-good", mode);
 
-  return svgResponse(PLACEHOLDER, "placeholder");
+  return svgResponse(PLACEHOLDER, "placeholder", mode);
 }
