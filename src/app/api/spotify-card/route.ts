@@ -41,6 +41,12 @@ function isPlayingTrack(svg: string): boolean {
     !normalized.includes('class="artist">offline</div>');
 }
 
+function trackIdentity(svg: string): string | null {
+  const artist = svg.match(/class="artist"[^>]*>([^<]+)</i)?.[1]?.trim();
+  const song = svg.match(/class="song"[^>]*>([^<]+)</i)?.[1]?.trim();
+  return artist && song ? `${artist}\u0000${song}` : null;
+}
+
 async function fetchSvg(url: string, timeoutMs: number): Promise<string | null> {
   try {
     const response = await fetch(url, {
@@ -70,17 +76,18 @@ async function readStoredTrack(): Promise<string | null> {
   }
 }
 
-async function savePlayingTrack(svg: string): Promise<void> {
-  if (lastStoredSvg === svg) return;
+async function savePlayingTrack(svg: string): Promise<boolean> {
+  const identity = trackIdentity(svg);
+  if (lastStoredSvg && identity && trackIdentity(lastStoredSvg) === identity) return true;
 
   try {
     const existing = await get(STORED_CARD_PATH, { access: "private", useCache: false });
     let ifMatch: string | undefined;
     if (existing?.statusCode === 200) {
       const previous = await new Response(existing.stream).text();
-      if (previous === svg) {
-        lastStoredSvg = svg;
-        return;
+      if (previous === svg || (identity && trackIdentity(previous) === identity)) {
+        lastStoredSvg = previous;
+        return true;
       }
       ifMatch = existing.blob.etag;
     }
@@ -93,9 +100,11 @@ async function savePlayingTrack(svg: string): Promise<void> {
       ...(ifMatch ? { ifMatch } : {}),
     });
     lastStoredSvg = svg;
+    return true;
   } catch (error) {
     // A storage outage must never break the live image.
     console.warn("Spotify card could not be persisted:", error);
+    return false;
   }
 }
 
@@ -115,7 +124,7 @@ function applyCardMode(svg: string, mode: CardMode): string {
     .replace('fill="#b6cadb"', 'fill="#57606a"');
 }
 
-function svgResponse(svg: string, source: "live" | "memory" | "stored" | "last-good" | "placeholder", mode: CardMode): Response {
+function svgResponse(svg: string, source: "live" | "memory" | "stored" | "last-good" | "placeholder", mode: CardMode, saved?: boolean): Response {
   return new Response(applyCardMode(svg, mode), {
     status: 200,
     headers: {
@@ -125,6 +134,7 @@ function svgResponse(svg: string, source: "live" | "memory" | "stored" | "last-g
       "Content-Security-Policy": "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox",
       "X-Spotify-Card-Source": source,
       "X-Spotify-Card-Mode": mode,
+      ...(saved === undefined ? {} : { "X-Spotify-Card-Saved": String(saved) }),
     },
   });
 }
@@ -134,8 +144,8 @@ export async function GET(request: Request): Promise<Response> {
   const live = await fetchSvg(LIVE_URL, 6000);
   if (live && isPlayingTrack(live)) {
     lastPlayingSvg = live;
-    await savePlayingTrack(live);
-    return svgResponse(live, "live", mode);
+    const saved = await savePlayingTrack(live);
+    return svgResponse(live, "live", mode, saved);
   }
 
   // The shared Blob is authoritative; a different warm instance may have
