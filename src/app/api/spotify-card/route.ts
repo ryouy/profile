@@ -82,22 +82,20 @@ async function savePlayingTrack(svg: string): Promise<boolean> {
 
   try {
     const existing = await get(STORED_CARD_PATH, { access: "private", useCache: false });
-    let ifMatch: string | undefined;
     if (existing?.statusCode === 200) {
       const previous = await new Response(existing.stream).text();
       if (previous === svg || (identity && trackIdentity(previous) === identity)) {
         lastStoredSvg = previous;
         return true;
       }
-      ifMatch = existing.blob.etag;
     }
 
-    // Save only real song cards, and avoid clobbering another instance's write.
+    // Skip unchanged songs via the read check above. An ETag precondition
+    // here can fail repeatedly under overlapping requests and block updates.
     await put(STORED_CARD_PATH, svg, {
       access: "private",
       allowOverwrite: true,
       contentType: "image/svg+xml",
-      ...(ifMatch ? { ifMatch } : {}),
     });
     lastStoredSvg = svg;
     return true;
