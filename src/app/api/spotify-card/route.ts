@@ -1,6 +1,7 @@
-// The upstream Spotify widget crashes on ads and some non-track playback.
-// Serve it live when healthy, otherwise return a repository-backed last-good SVG.
-// No Spotify credentials or paid storage are needed here.
+import { get, put } from "@vercel/blob";
+
+// The upstream widget can fail during ads and non-track playback. Keep each
+// healthy card in Blob so an offline response or a cold start cannot erase it.
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
@@ -14,6 +15,8 @@ const LIVE_URL =
 const LAST_GOOD_URL =
   "https://raw.githubusercontent.com/ryouy/ryouy/refs/heads/main/assets/spotify-last-good.svg";
 
+const STORED_CARD_PATH = "spotify/last-playing.svg";
+
 const PLACEHOLDER = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="445" viewBox="0 0 320 445"><rect width="320" height="445" rx="14" fill="#101b2b"/><text x="160" y="210" fill="#f7fbff" font-family="Arial,Helvetica,sans-serif" font-size="28" font-weight="600" text-anchor="middle">Spotify</text><text x="160" y="243" fill="#b6cadb" font-family="Arial,Helvetica,sans-serif" font-size="14" text-anchor="middle">Playback temporarily unavailable</text></svg>`;
 
 function isValidSvg(body: string, contentType: string): boolean {
@@ -24,9 +27,10 @@ function isValidSvg(body: string, contentType: string): boolean {
   return /^<svg(?:\s|>)/i.test(start);
 }
 
-// Function instances are reused when warm, so remember the most recently seen song
-// immediately. The GitHub snapshot is the durable fallback across cold starts.
+// Keep a fast in-memory copy too; Blob is the durable copy shared by instances.
+// The old GitHub snapshot remains a fallback if Blob is temporarily unavailable.
 let lastPlayingSvg: string | null = null;
+let lastStoredSvg: string | null = null;
 
 function isPlayingTrack(svg: string): boolean {
   const normalized = svg.toLowerCase();
@@ -51,6 +55,50 @@ async function fetchSvg(url: string, timeoutMs: number): Promise<string | null> 
   }
 }
 
+async function readStoredTrack(): Promise<string | null> {
+  try {
+    // Bypass the Blob CDN cache: overwritten cards must be visible immediately.
+    const result = await get(STORED_CARD_PATH, { access: "private", useCache: false });
+    if (result?.statusCode !== 200) return null;
+    const svg = await new Response(result.stream).text();
+    if (!isValidSvg(svg, result.blob.contentType) || !isPlayingTrack(svg)) return null;
+    lastStoredSvg = svg;
+    return svg;
+  } catch (error) {
+    console.warn("Spotify stored card unavailable:", error);
+    return null;
+  }
+}
+
+async function savePlayingTrack(svg: string): Promise<void> {
+  if (lastStoredSvg === svg) return;
+
+  try {
+    const existing = await get(STORED_CARD_PATH, { access: "private", useCache: false });
+    let ifMatch: string | undefined;
+    if (existing?.statusCode === 200) {
+      const previous = await new Response(existing.stream).text();
+      if (previous === svg) {
+        lastStoredSvg = svg;
+        return;
+      }
+      ifMatch = existing.blob.etag;
+    }
+
+    // Save only real song cards, and avoid clobbering another instance's write.
+    await put(STORED_CARD_PATH, svg, {
+      access: "private",
+      allowOverwrite: true,
+      contentType: "image/svg+xml",
+      ...(ifMatch ? { ifMatch } : {}),
+    });
+    lastStoredSvg = svg;
+  } catch (error) {
+    // A storage outage must never break the live image.
+    console.warn("Spotify card could not be persisted:", error);
+  }
+}
+
 type CardMode = "light" | "dark";
 
 // The provider's default SVG fixes its text colors to white. Recolor the
@@ -67,7 +115,7 @@ function applyCardMode(svg: string, mode: CardMode): string {
     .replace('fill="#b6cadb"', 'fill="#57606a"');
 }
 
-function svgResponse(svg: string, source: "live" | "memory" | "last-good" | "placeholder", mode: CardMode): Response {
+function svgResponse(svg: string, source: "live" | "memory" | "stored" | "last-good" | "placeholder", mode: CardMode): Response {
   return new Response(applyCardMode(svg, mode), {
     status: 200,
     headers: {
@@ -86,7 +134,16 @@ export async function GET(request: Request): Promise<Response> {
   const live = await fetchSvg(LIVE_URL, 6000);
   if (live && isPlayingTrack(live)) {
     lastPlayingSvg = live;
+    await savePlayingTrack(live);
     return svgResponse(live, "live", mode);
+  }
+
+  // The shared Blob is authoritative; a different warm instance may have
+  // cached an older song in memory.
+  const stored = await readStoredTrack();
+  if (stored) {
+    lastPlayingSvg = stored;
+    return svgResponse(stored, "stored", mode);
   }
 
   // An ad, pause or offline response never replaces a previously played song.
