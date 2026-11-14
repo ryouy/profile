@@ -32,20 +32,6 @@ const angleFor = (index: number) => {
   return (position * 360) / laneCount + orbitLayout[index].angleOffset;
 };
 
-const getSnapTarget = (rotation: number) => {
-  const nearest = orbitLayout.reduce(
-    (active, item, index) => {
-      const angle = normalizeAngle(angleFor(index) + rotation);
-      const distance = Math.abs(angle);
-      return distance < active.distance ? { index, distance } : active;
-    },
-    { index: 0, distance: Number.POSITIVE_INFINITY }
-  );
-  const itemAngle = angleFor(nearest.index);
-
-  return rotation + normalizeAngle(-itemAngle - rotation);
-};
-
 function ProjectActions({ project }: { project: Project }) {
   return (
     <div className="mt-5 flex flex-wrap gap-2">
@@ -96,10 +82,8 @@ export function Projects() {
   const [rotation, setRotation] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(true);
   const [rotationPaused, setRotationPaused] = useState(false);
-  const engagement = useRef({ hover: false, focus: false });
   const [isDragging, setIsDragging] = useState(false);
   const [lockedProjectIndex, setLockedProjectIndex] = useState<number | null>(null);
-  const [lastInteraction, setLastInteraction] = useState(Date.now());
   const [orbitMetrics, setOrbitMetrics] = useState({
     cardWidth: 30,
     innerSize: 76,
@@ -114,7 +98,6 @@ export function Projects() {
   const idleFrame = useRef<number | null>(null);
   const lastIdleTick = useRef<number | null>(null);
   const orbitPanelRef = useRef<HTMLDivElement | null>(null);
-  const projectSelectActiveRef = useRef(false);
 
   const setRotationValue = (value: number) => {
     rotationRef.current = value;
@@ -128,64 +111,20 @@ export function Projects() {
     }
   };
 
-  const markInteraction = () => {
-    setLastInteraction(Date.now());
-    lastIdleTick.current = null;
-  };
-
-  const animateTo = (target: number, onComplete?: () => void) => {
+  const glideAfterDrag = (initialVelocity: number) => {
     stopAnimation();
 
-    if (reducedMotion) {
-      setRotationValue(target);
-      onComplete?.();
-      return;
-    }
-
-    const tick = () => {
-      if (projectSelectActiveRef.current) {
-        animationFrame.current = null;
-        return;
-      }
-
-      const current = rotationRef.current;
-      const next = current + (target - current) * 0.12;
-
-      if (Math.abs(target - next) < 0.08) {
-        setRotationValue(target);
-        animationFrame.current = null;
-        onComplete?.();
-        return;
-      }
-
-      setRotationValue(next);
-      animationFrame.current = requestAnimationFrame(tick);
-    };
-
-    animationFrame.current = requestAnimationFrame(tick);
-  };
-
-  const glideAndSnap = (initialVelocity: number) => {
-    stopAnimation();
-
-    if (reducedMotion) {
-      animateTo(getSnapTarget(rotationRef.current));
-      return;
-    }
+    if (reducedMotion) return;
     let velocity = initialVelocity;
 
     const tick = () => {
-      if (projectSelectActiveRef.current) {
-        animationFrame.current = null;
-        return;
-      }
-
       velocity *= 0.92;
       const next = rotationRef.current + velocity * 16;
       setRotationValue(next);
 
       if (Math.abs(velocity) < 0.015) {
-        animateTo(getSnapTarget(rotationRef.current));
+        animationFrame.current = null;
+        lastIdleTick.current = null;
         return;
       }
 
@@ -252,13 +191,12 @@ export function Projects() {
 
   useEffect(() => {
     const tick = (time: number) => {
-      const idleFor = Date.now() - lastInteraction;
-
-      if (!reducedMotion && !rotationPaused && !engagement.current.hover && !engagement.current.focus && !document.hidden && !isDragging && !projectSelectActiveRef.current && animationFrame.current === null && idleFor > 4200) {
+      // Continuous, quiet motion: selecting or focusing a project never repositions the orbit.
+      if (!reducedMotion && !rotationPaused && !document.hidden && !isDragging && animationFrame.current === null) {
         const previous = lastIdleTick.current ?? time;
         const elapsed = Math.min(time - previous, 32);
         lastIdleTick.current = time;
-        setRotationValue(rotationRef.current + elapsed * 0.004);
+        setRotationValue(rotationRef.current + elapsed * 0.0025);
       } else {
         lastIdleTick.current = null;
       }
@@ -273,7 +211,7 @@ export function Projects() {
         cancelAnimationFrame(idleFrame.current);
       }
     };
-  }, [isDragging, lastInteraction, reducedMotion, rotationPaused]);
+  }, [isDragging, reducedMotion, rotationPaused]);
 
   const activeIndex = useMemo(() => {
     return orbitLayout.reduce(
@@ -290,42 +228,12 @@ export function Projects() {
   const activeProject = orbitLayout[displayedProjectIndex].project;
 
   const selectProject = (index: number) => {
-    if (!Number.isInteger(index) || index < 0 || index >= orbitLayout.length) {
-      return;
-    }
-
-    markInteraction();
+    if (!Number.isInteger(index) || index < 0 || index >= orbitLayout.length) return;
+    // Only update the information and highlight: never rotate or snap on selection.
     setLockedProjectIndex(index);
-    const baseAngle = angleFor(index);
-    const current = rotationRef.current;
-    const target = current + normalizeAngle(-baseAngle - current);
-    animateTo(target, () => {
-      if (!projectSelectActiveRef.current) {
-        setLockedProjectIndex(null);
-      }
-    });
-  };
-
-  const beginProjectSelectInteraction = () => {
-    projectSelectActiveRef.current = true;
-    setLockedProjectIndex((current) => current ?? activeIndex);
-    stopAnimation();
-    markInteraction();
-  };
-
-  const endProjectSelectInteraction = () => {
-    projectSelectActiveRef.current = false;
-    markInteraction();
-
-    if (animationFrame.current === null) {
-      setLockedProjectIndex(null);
-    }
   };
 
   const handleProjectSelectChange = (index: number) => {
-    // A native select fires change after the user has committed an option.
-    // Keep the orbit frozen while the menu is open, then move to the choice.
-    endProjectSelectInteraction();
     selectProject(index);
   };
 
@@ -338,23 +246,13 @@ export function Projects() {
   };
 
   return (
-    <section id="projects" className="py-16 sm:py-20"
-      onMouseEnter={() => { engagement.current.hover = true; }}
-      onMouseLeave={() => { engagement.current.hover = false; markInteraction(); }}
-      onFocusCapture={() => { engagement.current.focus = true; }}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-          engagement.current.focus = false;
-          markInteraction();
-        }
-      }}
-    >
+    <section id="projects" className="py-16 sm:py-20">
       <SectionHeader eyebrow="<playground />" title="Project Playground" />
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-      <p className="font-mono text-xs text-muted">{orbitProjects.length} projects in orbit · Drag to explore</p>
+      <p className="font-mono text-xs text-muted">{orbitProjects.length} projects in orbit · Select a star to explore</p>
       <button type="button" aria-pressed={rotationPaused} disabled={reducedMotion}
         className="rounded-lg border border-border px-3 py-2 text-sm text-muted hover:border-accent disabled:opacity-60"
-        onClick={() => { stopAnimation(); setRotationPaused((paused) => !paused); markInteraction(); }}
+        onClick={() => { setRotationPaused((paused) => !paused); }}
       >
         {reducedMotion ? "Rotation off" : rotationPaused ? "Resume rotation" : "Pause rotation"}
       </button>
@@ -366,8 +264,6 @@ export function Projects() {
           className="relative h-[29rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#050608] touch-none select-none sm:h-[37rem] lg:h-[39rem]"
           onPointerDown={(event) => {
             if (!event.isPrimary || event.button !== 0 || dragStart.current) return;
-            markInteraction();
-            setLockedProjectIndex(null);
             pressedProjectIndex.current = getProjectIndexAtPoint(event.clientX, event.clientY);
             stopAnimation();
             setIsDragging(true);
@@ -406,7 +302,7 @@ export function Projects() {
             dragStart.current = null;
             setIsDragging(false);
             if (dragMeta.current.moved) {
-              glideAndSnap(dragMeta.current.velocity);
+              glideAfterDrag(dragMeta.current.velocity);
             } else if (tappedProjectIndex !== null) {
               selectProject(tappedProjectIndex);
             }
@@ -420,14 +316,14 @@ export function Projects() {
             dragStart.current = null;
             setIsDragging(false);
             pressedProjectIndex.current = null;
-            animateTo(getSnapTarget(rotationRef.current));
+            lastIdleTick.current = null;
           }}
           onLostPointerCapture={(event) => {
             if (dragStart.current?.pointerId !== event.pointerId) return;
             dragStart.current = null;
             pressedProjectIndex.current = null;
             setIsDragging(false);
-            animateTo(getSnapTarget(rotationRef.current));
+            lastIdleTick.current = null;
           }}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_22%,rgba(255,255,255,0.18)_0_1px,transparent_1.5px),radial-gradient(circle_at_72%_28%,rgba(0,212,255,0.22)_0_1px,transparent_1.5px),radial-gradient(circle_at_62%_76%,rgba(255,255,255,0.12)_0_1px,transparent_1.5px),radial-gradient(circle_at_18%_72%,rgba(0,255,136,0.16)_0_1px,transparent_1.5px)] opacity-70" />
@@ -446,7 +342,7 @@ export function Projects() {
             style={{ height: orbitMetrics.innerSize, width: orbitMetrics.innerSize }}
           >
             <div className="flex h-full flex-col items-center justify-center px-3 text-center sm:px-5">
-              <p className="text-[10px] font-semibold leading-4 text-text sm:text-xs sm:leading-5">{activeProject.title}</p>
+              <p className="line-clamp-3 text-[10px] font-semibold leading-4 text-text sm:text-xs sm:leading-5">{activeProject.title}</p>
             </div>
           </div>
 
@@ -484,7 +380,7 @@ export function Projects() {
                   opacity: isActive ? 1 : 0.52 + depth * 0.42,
                   width: nodeWidth,
                   transform: `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${nodeScale})`,
-                  boxShadow: isActive ? "0 0 22px rgba(0,255,136,0.25)" : undefined,
+                  boxShadow: isActive ? "0 0 0 5px rgba(0,255,136,0.10), 0 0 27px rgba(0,255,136,0.36)" : undefined,
                   zIndex: isActive ? 105 : Math.round(depth * 100),
                 }}
               >
@@ -502,14 +398,6 @@ export function Projects() {
             <div className="relative">
               <select
                 value={displayedProjectIndex}
-                onPointerDown={beginProjectSelectInteraction}
-                onFocus={beginProjectSelectInteraction}
-                onBlur={endProjectSelectInteraction}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") {
-                    endProjectSelectInteraction();
-                  }
-                }}
                 onChange={(event) => handleProjectSelectChange(Number(event.target.value))}
                 className="h-11 w-full appearance-none rounded-xl border border-border bg-[#080808] px-4 pr-10 text-sm font-medium text-text outline-none transition hover:border-accent focus:border-accent"
               >
