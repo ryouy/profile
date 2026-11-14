@@ -11,6 +11,7 @@ type View = { x: number; y: number; scale: number };
 
 const WIDTH = 1740;
 const HEIGHT = 1200;
+// A readable neighborhood is shown by default; Fit is an optional overview.
 const categories: Project["category"][] = [
   "Web App", "Game", "Tool", "Data Visualization", "Experiment", "Research", "Club Site"
 ];
@@ -50,7 +51,7 @@ function makeLayout() {
       project: item.project, index: item.index, cluster: item.cluster,
       x: center.x + Math.cos(angle) * radius,
       y: center.y + Math.sin(angle) * radius * 0.72,
-      w: clamp(item.project.title.length * 7.2 + 30, 105, 275),
+      w: clamp(item.project.title.length * 8.6 + 46, 145, 330),
     };
   });
   // Resolve label collisions without losing the thematic neighborhoods.
@@ -64,8 +65,8 @@ function makeLayout() {
         const b = nodes[j];
         const dx = b.x - a.x;
         const dy = b.y - a.y;
-        const minX = (a.w + b.w) / 2 + 14;
-        const minY = 35;
+        const minX = (a.w + b.w) / 2 + 24;
+        const minY = 47;
         if (Math.abs(dx) < minX && Math.abs(dy) < minY) {
           const ratio = Math.max(Math.abs(dx) / minX, Math.abs(dy) / minY);
           const push = (1 - ratio) * 1.8;
@@ -107,7 +108,7 @@ function makeLayout() {
 }
 
 const graph = makeLayout();
-const initialView: View = { x: 0, y: 0, scale: 0.64 };
+const initialView: View = { x: 0, y: 0, scale: 1 };
 
 function ProjectActions({ project }: { project: Project }) {
   return (
@@ -147,6 +148,7 @@ export function Projects() {
   const drag = useRef<{ x: number; y: number; origin: View; moved: boolean; id: number } | null>(null);
   const movedAt = useRef(0);
   const [dragging, setDragging] = useState(false);
+  const initialPositioned = useRef(false);
 
   useEffect(() => {
     const el = svgRef.current;
@@ -196,14 +198,26 @@ export function Projects() {
 
   const screenCenter = { x: size.width / 2, y: size.height / 2 };
   const fit = useCallback(() => {
-    const scale = clamp(Math.min((size.width - 60) / WIDTH, (size.height - 60) / HEIGHT), 0.26, 1);
+    const scale = clamp(Math.min((size.width - 80) / WIDTH, (size.height - 80) / HEIGHT), 0.24, 1);
     setView({ scale, x: (size.width - WIDTH * scale) / 2, y: (size.height - HEIGHT * scale) / 2 });
   }, [size]);
 
-  useEffect(() => { fit(); }, [fit]);
+  useEffect(() => {
+    if (!initialPositioned.current && size.width > 0 && size.height > 0) {
+      initialPositioned.current = true;
+      const scale = size.width < 600 ? 1.05 : 1.18;
+      // Start in the central neighborhood rather than shrinking the entire map.
+      const center = { x: 785, y: 570 };
+      setView({
+        scale,
+        x: size.width / 2 - center.x * scale,
+        y: size.height / 2 - center.y * scale,
+      });
+    }
+  }, [size]);
   const zoom = (factor: number, at = screenCenter) => {
     setView(old => {
-      const scale = clamp(old.scale * factor, 0.24, 1.65);
+      const scale = clamp(old.scale * factor, 0.24, 2.1);
       const f = scale / old.scale;
       return { scale, x: at.x - (at.x - old.x) * f, y: at.y - (at.y - old.y) * f };
     });
@@ -220,7 +234,7 @@ export function Projects() {
     <section id="projects" className="py-16 sm:py-20">
       <SectionHeader eyebrow="<playground />" title="Project Playground" />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="font-mono text-xs text-muted">{graph.nodes.length} projects · Connected by themes and technologies</p>
+        <p className="font-mono text-xs text-muted">{graph.nodes.length} projects · Explore a connected, drifting universe</p>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => setPause(p => !p)} disabled={!motion}
             className="rounded-lg border border-border px-3 py-2 text-xs text-muted hover:border-accent/50 disabled:opacity-40">
@@ -280,9 +294,9 @@ export function Projects() {
           <g transform={ "translate(" + view.x + " " + view.y + ") scale(" + view.scale + ")" }>
             {centers.map((center, i) => (
               <g key={categories[i]} pointerEvents="none">
-                <circle cx={center.x} cy={center.y} r={235} fill={palette[i]} opacity=".026" />
+                <circle cx={center.x} cy={center.y} r={255} fill={palette[i]} opacity=".035" />
                 <circle cx={center.x} cy={center.y} r={160} fill="none" stroke={palette[i]} strokeOpacity=".08" strokeDasharray="3 11" />
-                <text x={center.x} y={center.y - 215} textAnchor="middle" fontSize="16" letterSpacing="3" fill={palette[i]} opacity=".43">
+                <text x={center.x} y={center.y - 215} textAnchor="middle" fontSize="18" letterSpacing="3" fill={palette[i]} opacity=".43">
                   {categories[i].toUpperCase()}
                 </text>
               </g>
@@ -294,7 +308,7 @@ export function Projects() {
               return <line key={edge.from + "-" + edge.to} x1={a.x} y1={a.y} x2={b.x} y2={b.y}
                 stroke={highlighted ? "#9cf9cd" : cross ? "#65b0c0" : "#8aa9ac"}
                 strokeWidth={highlighted ? 1.7 : cross ? 0.85 : 1.1}
-                strokeOpacity={highlighted ? 0.75 : cross ? 0.12 : 0.23}
+                strokeOpacity={highlighted ? 0.85 : cross ? 0.18 : 0.32}
                 strokeDasharray={cross ? "3 7" : undefined} pointerEvents="none" />;
             })}
             {graph.nodes.map((node, i) => {
@@ -313,15 +327,15 @@ export function Projects() {
                   onClick={() => { if (Date.now() - movedAt.current > 180) moveToProject(i); }}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); moveToProject(i); } }}>
                   {highlighted && <circle r="25" fill={palette[node.cluster]} opacity=".13" />}
-                  <rect x={-node.w / 2} y="-15" width={node.w} height="30" rx="12"
+                  <rect x={-node.w / 2} y="-20" width={node.w} height="40" rx="14"
                     fill={highlighted ? "#14251f" : "#0d1416"}
                     fillOpacity={dimmed ? 0.68 : .96}
-                    stroke={palette[node.cluster]} strokeOpacity={highlighted ? 0.86 : dimmed ? .11 : .35}
+                    stroke={palette[node.cluster]} strokeOpacity={highlighted ? 0.95 : dimmed ? .15 : .48}
                     strokeWidth={highlighted ? 1.5 : .8} />
-                  <circle cx={-node.w / 2 + 13} cy="0" r={highlighted ? 4.6 : 3.2}
+                  <circle cx={-node.w / 2 + 16} cy="0" r={highlighted ? 5.5 : 4.1}
                     fill={palette[node.cluster]} opacity={dimmed ? .4 : 1} />
-                  <text x={-node.w / 2 + 25} y="4.5" fontSize="12" fontWeight={highlighted ? "600" : "450"}
-                    fill={highlighted ? "#ffffff" : "#c6d5d7"} opacity={dimmed ? .6 : 1}>
+                  <text x={-node.w / 2 + 30} y="5.2" fontSize="15" fontWeight={highlighted ? "600" : "500"}
+                    fill={highlighted ? "#ffffff" : "#e3edf0"} opacity={dimmed ? .65 : 1}>
                     {node.project.title}
                   </text>
                 </g>
@@ -330,7 +344,7 @@ export function Projects() {
           </g>
         </svg>
         <div className="absolute bottom-4 left-4 pointer-events-none rounded-lg border border-white/10 bg-[#080d0e]/80 px-3 py-2 font-mono text-[10px] text-muted backdrop-blur">
-          Drag to pan · Scroll to zoom · Select to inspect
+          Drag to explore · Zoom for detail · Fit for overview
         </div>
         <div className="absolute bottom-4 right-4 flex gap-1.5">
           <button type="button" onClick={() => zoom(1.2)} aria-label="Zoom in" className="h-9 w-9 rounded-lg border border-border bg-[#10191b] text-lg text-text hover:border-accent">+</button>
