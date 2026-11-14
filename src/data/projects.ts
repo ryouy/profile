@@ -5,6 +5,7 @@ export type Project = {
   category: "Web App" | "Data Visualization" | "Tool" | "Experiment" | "Club Site" | "Research" | "Game";
   tech: string[];
   appUrl: string;
+  appStoreUrl?: string;
   githubUrl: string;
   featured?: boolean;
 };
@@ -358,6 +359,7 @@ export const projects: Project[] = [
     category: "Experiment",
     tech: ["Next.js", "React", "TypeScript", "CSS Animations"],
     appUrl: "https://wave-memo.vercel.app/",
+    appStoreUrl: "https://apps.apple.com/id/app/wavememo-%E6%9B%B8%E3%81%84%E3%81%A6-%E6%B5%81%E3%81%99/id6831863233?l=id",
     githubUrl: "https://github.com/ryouy/wave-memo",
     featured: true
   },
