@@ -538,5 +538,110 @@ export const projects: Project[] = [
     appUrl: "https://pomodoro-chrome-extension.vercel.app/",
     githubUrl: "https://github.com/ryouy/pomodoro-chrome-extension",
     featured: false
+  },
+  {
+    title: "Futo — Mindful Screen Time",
+    description: "An iPhone app that helps people pause before opening distracting apps and reflect on how they use their phone.",
+    details: [
+      "Timed app and website restrictions introduce a deliberate pause, followed by a choice to continue or stop; restrictions can resume automatically.",
+      "Purpose logs, gentle reflection, usage trends, and optional private sharing make screen-time habits easier to understand without competitive scores.",
+      "The project includes an iOS app, a public introduction site, and a browser-based demo; this link opens the introduction site."
+    ],
+    category: "Tool",
+    tech: ["Swift","SwiftUI","Family Controls","DeviceActivity","Firebase"],
+    appUrl: "https://ryouy.github.io/Futo/",
+    githubUrl: "https://github.com/ryouy/Futo",
+    featured: true
+  },
+  {
+    title: "ART SLIDE",
+    description: "A multilingual sliding puzzle gallery built around artworks from museum collections.",
+    details: [
+      "Browse and search artworks, choose a puzzle difficulty, preview the picture, and play a daily puzzle.",
+      "The gallery provides artist and period filters as well as artwork information and attribution."
+    ],
+    category: "Game",
+    tech: ["Web App","TypeScript","Puzzle","Art"],
+    appUrl: "https://slides.ryouy.workers.dev/art-slide",
+    githubUrl: "https://github.com/ryouy/slides",
+    featured: true
+  },
+  {
+    title: "BIG SLIDE",
+    description: "A browser-based sliding puzzle with a different rule set from ART SLIDE.",
+    details: [
+      "Part of the same multilingual slide-puzzle collection, with local progress and record saving.",
+      "Opens directly to the BIG SLIDE game."
+    ],
+    category: "Game",
+    tech: ["Web App","TypeScript","Puzzle"],
+    appUrl: "https://slides.ryouy.workers.dev/big-slide",
+    githubUrl: "https://github.com/ryouy/slides",
+    featured: false
+  },
+  {
+    title: "WORD SLIDE",
+    description: "A word-oriented variation of the sliding-puzzle collection.",
+    details: [
+      "A distinct slide-puzzle mode available alongside ART SLIDE and BIG SLIDE.",
+      "The shared collection supports multiple languages and saves progress locally."
+    ],
+    category: "Game",
+    tech: ["Web App","TypeScript","Word Puzzle"],
+    appUrl: "https://slides.ryouy.workers.dev/word-slide",
+    githubUrl: "https://github.com/ryouy/slides",
+    featured: false
+  },
+  {
+    title: "Infection Spread Simulation",
+    description: "A two-dimensional particle simulation showing how infections spread through contact.",
+    details: [
+      "Particles move in a 2D environment and become infected when they encounter infected particles.",
+      "The runnable Google Colab notebook and an example animation are provided in the repository."
+    ],
+    category: "Experiment",
+    tech: ["Python","Google Colab","Simulation"],
+    appUrl: "https://colab.research.google.com/github/ryouy/simulations/blob/main/simulations/infection-spread/infection_simulation.ipynb",
+    githubUrl: "https://github.com/ryouy/simulations",
+    featured: false
+  },
+  {
+    title: "Information Diffusion Simulation",
+    description: "A network simulation for exploring how information propagates through social connections.",
+    details: [
+      "Models the movement of information across a social-network-like structure.",
+      "Includes a runnable Colab notebook and an animated sample output."
+    ],
+    category: "Experiment",
+    tech: ["Python","Google Colab","Networks"],
+    appUrl: "https://colab.research.google.com/github/ryouy/simulations/blob/main/simulations/information-diffusion/information-diffusion.ipynb",
+    githubUrl: "https://github.com/ryouy/simulations",
+    featured: false
+  },
+  {
+    title: "Opinion Polarization Simulation",
+    description: "A model of opinion change driven by influence and resistance among neighboring agents.",
+    details: [
+      "Explores opinion dynamics through interactions between neighboring agents.",
+      "The notebook runs in Colab and the repository includes an animation of the results."
+    ],
+    category: "Experiment",
+    tech: ["Python","Google Colab","Opinion Dynamics"],
+    appUrl: "https://colab.research.google.com/github/ryouy/simulations/blob/main/simulations/opinion-polarization/opinion-polarization.ipynb",
+    githubUrl: "https://github.com/ryouy/simulations",
+    featured: false
+  },
+  {
+    title: "Cascading Failures Simulation",
+    description: "A network-resilience experiment examining how failures can trigger further failures.",
+    details: [
+      "Illustrates cascading faults in a connected network and their implications for robustness.",
+      "Provides a runnable Colab notebook together with a sample animated result."
+    ],
+    category: "Experiment",
+    tech: ["Python","Google Colab","Network Resilience"],
+    appUrl: "https://colab.research.google.com/github/ryouy/simulations/blob/main/simulations/cascading-failures/cascading-failures.ipynb",
+    githubUrl: "https://github.com/ryouy/simulations",
+    featured: false
   }
 ];
