@@ -140,7 +140,7 @@ export function Projects() {
   const [selected, setSelected] = useState<number | null>(null);
   const [hovered, setHovered] = useState<number | null>(null);
   const [view, setView] = useState<View>(initialView);
-  const [size, setSize] = useState({ width: 1080, height: 700 });
+  const [size, setSize] = useState({ width: 0, height: 0 });
   const [motion, setMotion] = useState(false);
   const [pause, setPause] = useState(false);
   const [time, setTime] = useState(0);
