@@ -357,7 +357,7 @@ export const projects: Project[] = [
     ],
     category: "Experiment",
     tech: ["Next.js", "React", "TypeScript", "CSS Animations"],
-    appUrl: "https://wave-memo-vlgs.vercel.app",
+    appUrl: "https://wave-memo.vercel.app/",
     githubUrl: "https://github.com/ryouy/wave-memo",
     featured: true
   },
