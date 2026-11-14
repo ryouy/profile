@@ -78,7 +78,7 @@ export function Projects() {
 
   return (
     <section id="projects" className="py-16 sm:py-20">
-      <SectionHeader eyebrow="<playground />" title="Project Playground" />
+      <SectionHeader eyebrow="<projects />" title="List" />
       <p className="mb-6 max-w-2xl text-sm leading-7 text-muted">
         A collection of {projects.length} apps, tools, games, and experiments.
       </p>
