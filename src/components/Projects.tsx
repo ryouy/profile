@@ -4,532 +4,278 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { SectionHeader } from "./SectionHeader";
 import { Project, projects } from "../data/projects";
 
-const normalizeAngle = (angle: number) => {
-  const normalized = ((angle % 360) + 360) % 360;
-  return normalized > 180 ? normalized - 360 : normalized;
-};
+const PAGE_SIZE = 12;
+const CATEGORIES = ["All", "Web App", "Data Visualization", "Tool", "Experiment", "Club Site", "Research", "Game"] as const;
+type CategoryFilter = (typeof CATEGORIES)[number];
 
-const hashTitle = (title: string) => {
-  return Array.from(title).reduce((hash, character) => (hash * 31 + character.charCodeAt(0)) >>> 0, 2166136261);
-};
+const orderedProjects = [...projects].sort((a, b) =>
+  Number(Boolean(b.featured)) - Number(Boolean(a.featured)) || a.title.localeCompare(b.title)
+);
 
-const orbitProjects = [...projects].sort((first, second) => hashTitle(first.title) - hashTitle(second.title));
-const orbitLayout = orbitProjects.map((project, index) => {
-  const hash = hashTitle(project.title);
-
-  return {
-    project,
-    lane: index % 4,
-    angleOffset: ((hash >>> 8) % 13) - 6,
-    radiusOffset: ((hash >>> 16) % 13) - 6,
-  };
-});
-const stepAngle = 360 / orbitProjects.length;
-
-const getSnapTarget = (rotation: number) => {
-  const nearest = orbitLayout.reduce(
-    (active, item, index) => {
-      const angle = normalizeAngle(index * stepAngle + item.angleOffset + rotation);
-      const distance = Math.abs(angle);
-      return distance < active.distance ? { index, distance } : active;
-    },
-    { index: 0, distance: Number.POSITIVE_INFINITY }
-  );
-  const itemAngle = nearest.index * stepAngle + orbitLayout[nearest.index].angleOffset;
-
-  return rotation + normalizeAngle(-itemAngle - rotation);
-};
+const normalizeAngle = (angle: number) => ((angle % 360) + 360) % 360;
 
 function ProjectActions({ project }: { project: Project }) {
   return (
-    <div className="mt-5 flex flex-wrap gap-2">
-      {project.appUrl ? (
-        <a
-          href={project.appUrl}
+    <div className="mt-6 flex flex-wrap gap-2">
+      {project.appUrl && (
+        <a href={project.appUrl} target="_blank" rel="noopener noreferrer"
           aria-label={`Open ${project.title} app (opens in a new tab)`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex min-h-9 items-center justify-center rounded-lg border border-accent/50 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent transition hover:bg-accent hover:text-[#041008]"
-        >
+          className="inline-flex min-h-10 items-center rounded-lg border border-accent/50 bg-accent/10 px-4 text-xs font-semibold text-accent transition hover:bg-accent hover:text-[#041008]">
           Open App
         </a>
-      ) : null}
-      <a
-        href={project.githubUrl}
+      )}
+      <a href={project.githubUrl} target="_blank" rel="noopener noreferrer"
         aria-label={`View ${project.title} source code (opens in a new tab)`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex min-h-9 items-center justify-center rounded-lg border border-border bg-[#0b0b0b] px-3 py-1.5 text-xs font-semibold text-text transition hover:border-accent hover:text-accent"
-      >
+        className="inline-flex min-h-10 items-center rounded-lg border border-border bg-[#0b0b0b] px-4 text-xs font-semibold text-text transition hover:border-accent hover:text-accent">
         View Code
       </a>
     </div>
   );
 }
 
-function TechTags({ tech }: { tech: string[] }) {
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {tech.slice(0, 5).map((tag) => (
-        <span key={tag} className="rounded-full border border-border bg-[#0b0b0b] px-2 py-0.5 text-[11px] text-muted">
-          {tag}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 export function Projects() {
+  const [category, setCategory] = useState<CategoryFilter>("All");
+  const [page, setPage] = useState(0);
+  const [selectedTitle, setSelectedTitle] = useState(orderedProjects[0].title);
   const [rotation, setRotation] = useState(0);
+  const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(true);
-  const [rotationPaused, setRotationPaused] = useState(false);
-  const engagement = useRef({ hover: false, focus: false });
-  const [isDragging, setIsDragging] = useState(false);
-  const [lockedProjectIndex, setLockedProjectIndex] = useState<number | null>(null);
-  const [lastInteraction, setLastInteraction] = useState(Date.now());
-  const [orbitMetrics, setOrbitMetrics] = useState({
-    cardWidth: 36,
-    innerSize: 80,
-    laneRadii: [112, 91, 70, 49],
-    compact: true,
-  });
-  const dragStart = useRef<{ x: number; y: number; rotation: number; pointerId: number } | null>(null);
-  const dragMeta = useRef({ lastX: 0, lastTime: 0, velocity: 0, moved: false });
-  const pressedProjectIndex = useRef<number | null>(null);
+  const [compact, setCompact] = useState(false);
+  const orbitRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{ x: number; y: number; rotation: number; moved: boolean } | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const hoverRef = useRef(false);
+  const focusRef = useRef(false);
   const rotationRef = useRef(0);
-  const animationFrame = useRef<number | null>(null);
-  const idleFrame = useRef<number | null>(null);
-  const lastIdleTick = useRef<number | null>(null);
-  const orbitPanelRef = useRef<HTMLDivElement | null>(null);
-  const projectSelectActiveRef = useRef(false);
 
-  const setRotationValue = (value: number) => {
-    rotationRef.current = value;
-    setRotation(value);
-  };
-
-  const stopAnimation = () => {
-    if (animationFrame.current !== null) {
-      cancelAnimationFrame(animationFrame.current);
-      animationFrame.current = null;
-    }
-  };
-
-  const markInteraction = () => {
-    setLastInteraction(Date.now());
-    lastIdleTick.current = null;
-  };
-
-  const animateTo = (target: number, onComplete?: () => void) => {
-    stopAnimation();
-
-    if (reducedMotion) {
-      setRotationValue(target);
-      onComplete?.();
-      return;
-    }
-
-    const tick = () => {
-      if (projectSelectActiveRef.current) {
-        animationFrame.current = null;
-        return;
-      }
-
-      const current = rotationRef.current;
-      const next = current + (target - current) * 0.12;
-
-      if (Math.abs(target - next) < 0.08) {
-        setRotationValue(target);
-        animationFrame.current = null;
-        onComplete?.();
-        return;
-      }
-
-      setRotationValue(next);
-      animationFrame.current = requestAnimationFrame(tick);
-    };
-
-    animationFrame.current = requestAnimationFrame(tick);
-  };
-
-  const glideAndSnap = (initialVelocity: number) => {
-    stopAnimation();
-
-    if (reducedMotion) {
-      animateTo(getSnapTarget(rotationRef.current));
-      return;
-    }
-    let velocity = initialVelocity;
-
-    const tick = () => {
-      if (projectSelectActiveRef.current) {
-        animationFrame.current = null;
-        return;
-      }
-
-      velocity *= 0.92;
-      const next = rotationRef.current + velocity * 16;
-      setRotationValue(next);
-
-      if (Math.abs(velocity) < 0.015) {
-        animateTo(getSnapTarget(rotationRef.current));
-        return;
-      }
-
-      animationFrame.current = requestAnimationFrame(tick);
-    };
-
-    animationFrame.current = requestAnimationFrame(tick);
-  };
+  const filtered = useMemo(
+    () => category === "All" ? orderedProjects : orderedProjects.filter((p) => p.category === category),
+    [category]
+  );
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const visible = useMemo(() => filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE), [filtered, page]);
+  const selectedProject = filtered.find((p) => p.title === selectedTitle) ?? visible[0] ?? orderedProjects[0];
+  const selectedIndex = visible.findIndex((p) => p.title === selectedProject.title);
 
   useEffect(() => {
-    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => {
-      setReducedMotion(preference.matches);
-      if (preference.matches) stopAnimation();
-      lastIdleTick.current = null;
-    };
-    update();
-    preference.addEventListener("change", update);
-    return () => preference.removeEventListener("change", update);
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMotion = () => setReducedMotion(motion.matches);
+    updateMotion();
+    motion.addEventListener("change", updateMotion);
+    return () => motion.removeEventListener("change", updateMotion);
   }, []);
 
   useEffect(() => {
-    return () => stopAnimation();
-  }, []);
-
-  useEffect(() => {
-    const panel = orbitPanelRef.current;
-
-    if (!panel) {
-      return;
-    }
-
-    const updateMetrics = () => {
-      const rect = panel.getBoundingClientRect();
-      const isCompact = rect.width < 560;
-
-      if (!isCompact) {
-        setOrbitMetrics({
-          cardWidth: 124,
-          innerSize: 108,
-          laneRadii: [234, 190, 146, 102],
-          compact: false,
-        });
-        return;
-      }
-
-      const cardWidth = 36;
-      const outerRadius = Math.max(94, Math.min(rect.width, rect.height) / 2 - cardWidth / 2 - 10);
-      const laneGap = Math.max(18, (outerRadius - 50) / 3);
-      const laneRadii = [0, 1, 2, 3].map((lane) => outerRadius - laneGap * lane);
-      const innerSize = 80;
-
-      setOrbitMetrics({ cardWidth, innerSize, laneRadii, compact: true });
-    };
-
-    updateMetrics();
-
-    const observer = new ResizeObserver(updateMetrics);
-    observer.observe(panel);
-
+    const target = orbitRef.current;
+    if (!target) return;
+    const observer = new ResizeObserver(([entry]) => setCompact(entry.contentRect.width < 490));
+    observer.observe(target);
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    const tick = (time: number) => {
-      const idleFor = Date.now() - lastInteraction;
-
-      if (!reducedMotion && !rotationPaused && !engagement.current.hover && !engagement.current.focus && !document.hidden && !isDragging && !projectSelectActiveRef.current && animationFrame.current === null && idleFor > 4200) {
-        const previous = lastIdleTick.current ?? time;
-        const elapsed = Math.min(time - previous, 32);
-        lastIdleTick.current = time;
-        setRotationValue(rotationRef.current + elapsed * 0.004);
-      } else {
-        lastIdleTick.current = null;
+    if (paused || reducedMotion || dragging) return;
+    let frame = 0;
+    let previous = 0;
+    const tick = (now: number) => {
+      if (previous && !hoverRef.current && !focusRef.current && !document.hidden) {
+        rotationRef.current = normalizeAngle(rotationRef.current + Math.min(now - previous, 50) * 0.002);
+        setRotation(rotationRef.current);
       }
-
-      idleFrame.current = requestAnimationFrame(tick);
+      previous = now;
+      frame = requestAnimationFrame(tick);
     };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [paused, reducedMotion, dragging]);
 
-    idleFrame.current = requestAnimationFrame(tick);
-
-    return () => {
-      if (idleFrame.current) {
-        cancelAnimationFrame(idleFrame.current);
-      }
-    };
-  }, [isDragging, lastInteraction, reducedMotion, rotationPaused]);
-
-  const activeIndex = useMemo(() => {
-    return orbitLayout.reduce(
-      (active, item, index) => {
-        const angle = normalizeAngle(index * stepAngle + item.angleOffset + rotation);
-        const distance = Math.abs(angle);
-        return distance < active.distance ? { index, distance } : active;
-      },
-      { index: 0, distance: Number.POSITIVE_INFINITY }
-    ).index;
-  }, [rotation]);
-
-  const displayedProjectIndex = lockedProjectIndex ?? activeIndex;
-  const activeProject = orbitLayout[displayedProjectIndex].project;
-
-  const selectProject = (index: number) => {
-    if (!Number.isInteger(index) || index < 0 || index >= orbitLayout.length) {
-      return;
-    }
-
-    markInteraction();
-    setLockedProjectIndex(index);
-    const baseAngle = index * stepAngle + orbitLayout[index].angleOffset;
-    const current = rotationRef.current;
-    const target = current + normalizeAngle(-baseAngle - current);
-    animateTo(target, () => {
-      if (!projectSelectActiveRef.current) {
-        setLockedProjectIndex(null);
-      }
-    });
+  const changePage = (nextPage: number) => {
+    const next = Math.max(0, Math.min(nextPage, pageCount - 1));
+    setPage(next);
+    setSelectedTitle(filtered[next * PAGE_SIZE]?.title ?? filtered[0].title);
+    rotationRef.current = 0;
+    setRotation(0);
   };
 
-  const beginProjectSelectInteraction = () => {
-    projectSelectActiveRef.current = true;
-    setLockedProjectIndex((current) => current ?? activeIndex);
-    stopAnimation();
-    markInteraction();
+  const changeCategory = (next: CategoryFilter) => {
+    setCategory(next);
+    setPage(0);
+    const nextProjects = next === "All" ? orderedProjects : orderedProjects.filter((p) => p.category === next);
+    setSelectedTitle(nextProjects[0]?.title ?? orderedProjects[0].title);
+    rotationRef.current = 0;
+    setRotation(0);
   };
 
-  const endProjectSelectInteraction = () => {
-    projectSelectActiveRef.current = false;
-    markInteraction();
-
-    if (animationFrame.current === null) {
-      setLockedProjectIndex(null);
+  const selectProject = (project: Project) => {
+    setSelectedTitle(project.title);
+    const index = visible.findIndex((item) => item.title === project.title);
+    if (index >= 0) {
+      // Move the selected node to the bottom, where it is least likely to obscure others.
+      const angle = index * (360 / visible.length);
+      rotationRef.current = normalizeAngle(180 - angle);
+      setRotation(rotationRef.current);
     }
   };
 
-  const handleProjectSelectChange = (index: number) => {
-    // A native select fires change after the user has committed an option.
-    // Keep the orbit frozen while the menu is open, then move to the choice.
-    endProjectSelectInteraction();
-    selectProject(index);
-  };
-
-  const getProjectIndexAtPoint = (x: number, y: number) => {
-    const element = document.elementFromPoint(x, y);
-    const projectButton = element?.closest("[data-project-index]");
-    const index = projectButton instanceof HTMLElement ? Number(projectButton.dataset.projectIndex) : NaN;
-
-    return Number.isFinite(index) ? index : null;
-  };
+  const activeOrbitIndex = selectedIndex >= 0 ? selectedIndex : 0;
 
   return (
-    <section id="projects" className="py-16 sm:py-20"
-      onMouseEnter={() => { engagement.current.hover = true; }}
-      onMouseLeave={() => { engagement.current.hover = false; markInteraction(); }}
-      onFocusCapture={() => { engagement.current.focus = true; }}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-          engagement.current.focus = false;
-          markInteraction();
-        }
-      }}
-    >
+    <section id="projects" className="py-16 sm:py-20">
       <SectionHeader eyebrow="<playground />" title="Project Playground" />
-      <button type="button" aria-pressed={rotationPaused} disabled={reducedMotion}
-        className="mb-5 rounded-lg border border-border px-3 py-2 text-sm text-muted hover:border-accent disabled:opacity-60"
-        onClick={() => { stopAnimation(); setRotationPaused((paused) => !paused); markInteraction(); }}
-      >
-        {reducedMotion ? "Rotation off" : rotationPaused ? "Resume rotation" : "Pause rotation"}
-      </button>
+      <div className="mb-5 flex flex-wrap items-center gap-2" aria-label="Filter projects by category">
+        {CATEGORIES.map((item) => {
+          const count = item === "All" ? orderedProjects.length : orderedProjects.filter((p) => p.category === item).length;
+          if (!count) return null;
+          return (
+            <button type="button" key={item} onClick={() => changeCategory(item)}
+              aria-pressed={category === item}
+              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                category === item
+                  ? "border-accent/60 bg-accent/10 text-accent"
+                  : "border-border bg-[#090b0c]/80 text-muted hover:border-accent/40 hover:text-text"
+              }`}>
+              {item} <span className="ml-1 opacity-60">{count}</span>
+            </button>
+          );
+        })}
+      </div>
 
-      <div className="grid items-stretch gap-6 lg:grid-cols-[1.18fr_0.82fr]">
-        <div
-          ref={orbitPanelRef}
-          className="relative h-[28rem] overflow-hidden rounded-[1.75rem] border border-border bg-[#050608] touch-none select-none sm:h-[34rem] lg:h-[36rem]"
-          onPointerDown={(event) => {
-            if (!event.isPrimary || event.button !== 0 || dragStart.current) return;
-            markInteraction();
-            setLockedProjectIndex(null);
-            pressedProjectIndex.current = getProjectIndexAtPoint(event.clientX, event.clientY);
-            stopAnimation();
-            setIsDragging(true);
-            dragStart.current = { x: event.clientX, y: event.clientY, rotation: rotationRef.current, pointerId: event.pointerId };
-            dragMeta.current = {
-              lastX: event.clientX,
-              lastTime: performance.now(),
-              velocity: 0,
-              moved: false,
-            };
-            event.currentTarget.setPointerCapture(event.pointerId);
-          }}
-          onPointerMove={(event) => {
-            if (!dragStart.current || dragStart.current.pointerId !== event.pointerId) {
-              return;
-            }
-
-            const deltaX = event.clientX - dragStart.current.x;
-            const deltaY = event.clientY - dragStart.current.y;
-            const nextRotation = dragStart.current.rotation + deltaX * 0.36;
-            const now = performance.now();
-            const elapsed = Math.max(now - dragMeta.current.lastTime, 1);
-            const deltaRotation = nextRotation - rotationRef.current;
-
-            dragMeta.current.velocity = deltaRotation / elapsed;
-            dragMeta.current.lastX = event.clientX;
-            dragMeta.current.lastTime = now;
-            dragMeta.current.moved = dragMeta.current.moved || Math.hypot(deltaX, deltaY) > 14;
-            setRotationValue(nextRotation);
-          }}
-          onPointerUp={(event) => {
-            if (!dragStart.current || dragStart.current.pointerId !== event.pointerId) return;
-            const releasedProjectIndex = getProjectIndexAtPoint(event.clientX, event.clientY);
-            const tappedProjectIndex = releasedProjectIndex ?? pressedProjectIndex.current;
-
-            dragStart.current = null;
-            setIsDragging(false);
-            if (dragMeta.current.moved) {
-              glideAndSnap(dragMeta.current.velocity);
-            } else if (tappedProjectIndex !== null) {
-              selectProject(tappedProjectIndex);
-            }
-            pressedProjectIndex.current = null;
-            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-              event.currentTarget.releasePointerCapture(event.pointerId);
-            }
-          }}
-          onPointerCancel={(event) => {
-            if (dragStart.current?.pointerId !== event.pointerId) return;
-            dragStart.current = null;
-            setIsDragging(false);
-            pressedProjectIndex.current = null;
-            animateTo(getSnapTarget(rotationRef.current));
-          }}
-          onLostPointerCapture={(event) => {
-            if (dragStart.current?.pointerId !== event.pointerId) return;
-            dragStart.current = null;
-            pressedProjectIndex.current = null;
-            setIsDragging(false);
-            animateTo(getSnapTarget(rotationRef.current));
-          }}
-        >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_22%,rgba(255,255,255,0.18)_0_1px,transparent_1.5px),radial-gradient(circle_at_72%_28%,rgba(0,212,255,0.22)_0_1px,transparent_1.5px),radial-gradient(circle_at_62%_76%,rgba(255,255,255,0.12)_0_1px,transparent_1.5px),radial-gradient(circle_at_18%_72%,rgba(0,255,136,0.16)_0_1px,transparent_1.5px)] opacity-70" />
-          {orbitMetrics.laneRadii.map((radius, index) => (
-            <div
-              key={index}
-              className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border ${
-                index % 2 === 0 ? "border-accent/10" : "border-accentSecondary/10"
-              } ${index === 0 ? "shadow-[0_0_80px_rgba(0,212,255,0.08)]" : ""}`}
-              style={{ height: radius * 2, width: radius * 2 }}
-            />
-          ))}
-          <div className="absolute inset-8 rounded-full bg-[radial-gradient(circle,rgba(0,255,136,0.10)_0%,transparent_34%,rgba(0,212,255,0.06)_45%,transparent_66%)]" />
-          <div
-            className="absolute left-1/2 top-1/2 z-[110] -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/20 bg-[#050505]/95 shadow-[0_0_70px_rgba(0,255,136,0.16),inset_0_0_28px_rgba(0,212,255,0.06)]"
-            style={{ height: orbitMetrics.innerSize, width: orbitMetrics.innerSize }}
-          >
-            <div className="flex h-full flex-col items-center justify-center px-3 text-center sm:px-5">
-              <p className="text-[10px] font-semibold leading-4 text-text sm:text-xs sm:leading-5">{activeProject.title}</p>
+      <div className="grid items-stretch gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="relative min-w-0 overflow-hidden rounded-[1.75rem] border border-border bg-[#050608]">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_45%,rgba(0,255,136,0.06),transparent_65%)]" />
+          <div className="relative flex items-center justify-between gap-3 px-5 pt-5">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted">Project orbit</p>
+              <p className="mt-1 text-xs text-muted">Showing {visible.length} of {filtered.length} projects</p>
             </div>
+            <button type="button" disabled={reducedMotion} aria-pressed={paused}
+              onClick={() => setPaused((p) => !p)}
+              className="rounded-lg border border-border px-3 py-2 text-xs text-muted transition hover:border-accent/50 disabled:opacity-40">
+              {reducedMotion ? "Motion off" : paused ? "Resume" : "Pause"}
+            </button>
           </div>
 
-          {orbitLayout.map(({ project, lane, angleOffset, radiusOffset }, index) => {
-            const baseAngle = index * stepAngle + angleOffset;
-            const angle = normalizeAngle(baseAngle + rotation);
-            const radians = (angle * Math.PI) / 180;
-            const depth = (Math.cos(radians) + 1) / 2;
-            const laneRadius = orbitMetrics.laneRadii[lane] + radiusOffset;
-            const x = Math.sin(radians) * laneRadius;
-            const y = Math.cos(radians) * laneRadius;
-            const isActive = index === displayedProjectIndex;
-            const isCompactNode = orbitMetrics.compact || (orbitProjects.length > 30 && lane >= 2);
-            const nodeWidth = isCompactNode ? (orbitMetrics.compact ? orbitMetrics.cardWidth : 40) : orbitMetrics.cardWidth;
+          <div ref={orbitRef}
+            className="relative mx-auto mt-2 h-[340px] w-full touch-pan-y select-none sm:h-[455px] lg:h-[465px]"
+            onMouseEnter={() => { hoverRef.current = true; }}
+            onMouseLeave={() => { hoverRef.current = false; }}
+            onFocusCapture={() => { focusRef.current = true; }}
+            onBlurCapture={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) focusRef.current = false; }}
+            onPointerDown={(e) => {
+              if (e.button !== 0 || !e.isPrimary) return;
+              dragRef.current = { x: e.clientX, y: e.clientY, rotation: rotationRef.current, moved: false };
+            }}
+            onPointerMove={(e) => {
+              if (!dragRef.current) return;
+              const dx = e.clientX - dragRef.current.x;
+              const dy = e.clientY - dragRef.current.y;
+              if (Math.hypot(dx, dy) < 8 && !dragRef.current.moved) return;
+              dragRef.current.moved = true;
+              if (!dragging) setDragging(true);
+              rotationRef.current = normalizeAngle(dragRef.current.rotation + dx * 0.34);
+              setRotation(rotationRef.current);
+            }}
+            onPointerUp={() => { dragRef.current = null; setDragging(false); }}
+            onPointerCancel={() => { dragRef.current = null; setDragging(false); }}
+          >
+            <div className="pointer-events-none absolute left-1/2 top-1/2 h-[min(82vw,390px)] w-[min(82vw,390px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/10" />
+            <div className="pointer-events-none absolute left-1/2 top-1/2 h-[min(51vw,250px)] w-[min(51vw,250px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-accentSecondary/10" />
+            <div className="pointer-events-none absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/20 bg-[#07120d] shadow-[0_0_55px_rgba(0,255,136,0.09)] sm:h-24 sm:w-24">
+              <div className="flex h-full flex-col items-center justify-center">
+                <span className="font-mono text-lg font-semibold text-accent">{filtered.length}</span>
+                <span className="text-[9px] uppercase tracking-widest text-muted">projects</span>
+              </div>
+            </div>
 
-            return (
-              <button
-                key={project.title}
-                type="button"
-                data-project-index={index}
-                aria-label={project.title}
-                aria-pressed={isActive}
-                onClick={(event) => {
-                  // Pointer selection is handled once by the orbit's drag/tap handler.
-                  if (event.detail === 0) selectProject(index);
-                }}
-                title={project.title}
-                className={`absolute left-1/2 top-1/2 border bg-surface/95 shadow-lg backdrop-blur ${
-                  isCompactNode
-                    ? "flex items-center justify-center rounded-full p-0"
-                    : "rounded-xl p-2 text-left"
-                } ${
-                  isDragging ? "cursor-grabbing" : "cursor-grab transition-[transform,opacity,border-color] duration-300 ease-out"
-                }`}
-                style={{
-                  borderColor: isActive ? "#00ff88" : "#262626",
-                  height: isCompactNode ? nodeWidth : undefined,
-                  opacity: 0.34 + depth * 0.66,
-                  width: nodeWidth,
-                  transform: `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${0.62 + depth * 0.3})`,
-                  zIndex: Math.round(depth * 100),
-                }}
-              >
-                {isCompactNode ? (
-                  <span className={`h-2 w-2 rounded-full ${isActive ? "bg-accent" : "bg-muted"}`} />
-                ) : (
-                  <span className="line-clamp-2 block text-[11px] font-semibold leading-4 text-text">{project.title}</span>
-                )}
-              </button>
-            );
-          })}
+            {visible.map((project, index) => {
+              const angle = normalizeAngle(index * (360 / visible.length) + rotation);
+              const radians = (angle * Math.PI) / 180;
+              const isOuter = index % 2 === 0;
+              const radius = compact ? (isOuter ? 134 : 92) : (isOuter ? 194 : 136);
+              const x = Math.sin(radians) * radius;
+              const y = Math.cos(radians) * radius;
+              const active = index === activeOrbitIndex;
+              return (
+                <button key={project.title} type="button" title={project.title}
+                  aria-label={`Select ${project.title}`} aria-pressed={active}
+                  onClick={() => { if (!dragRef.current?.moved && !dragging) selectProject(project); }}
+                  className={`absolute left-1/2 top-1/2 flex items-center justify-center rounded-full border transition-[border-color,background-color,box-shadow] duration-200 ${
+                    active
+                      ? "border-accent bg-[#123425] text-accent shadow-[0_0_22px_rgba(0,255,136,0.18)]"
+                      : "border-[#304039] bg-[#101715] text-[#b2c0bb] hover:border-accent/60 hover:text-text"
+                  }`}
+                  style={{
+                    width: compact ? 30 : 42,
+                    height: compact ? 30 : 42,
+                    transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`,
+                  }}>
+                  <span className="font-mono text-[10px] font-medium">{String(page * PAGE_SIZE + index + 1).padStart(2, "0")}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="relative flex items-center justify-between gap-3 border-t border-border/70 px-5 py-4">
+            <button type="button" onClick={() => changePage(page - 1)} disabled={page === 0}
+              className="min-h-9 rounded-lg border border-border px-4 text-xs text-text transition hover:border-accent/50 disabled:cursor-not-allowed disabled:opacity-30">
+              Previous
+            </button>
+            <div className="flex items-center gap-1.5" aria-label={`Page ${page + 1} of ${pageCount}`}>
+              {Array.from({ length: pageCount }, (_, i) => (
+                <button key={i} type="button" onClick={() => changePage(i)} aria-label={`Go to page ${i + 1}`}
+                  aria-current={i === page ? "page" : undefined}
+                  className={`h-2 rounded-full transition-all ${
+                    i === page ? "w-5 bg-accent" : "w-2 bg-[#40504a] hover:bg-accent/60"
+                  }`} />
+              ))}
+            </div>
+            <button type="button" onClick={() => changePage(page + 1)} disabled={page === pageCount - 1}
+              className="min-h-9 rounded-lg border border-border px-4 text-xs text-text transition hover:border-accent/50 disabled:cursor-not-allowed disabled:opacity-30">
+              Next
+            </button>
+          </div>
         </div>
 
-        <article className="flex h-full flex-col rounded-[1.75rem] border border-border bg-surface/85 p-6 backdrop-blur">
+        <article className="flex min-w-0 flex-col rounded-[1.75rem] border border-border bg-surface/85 p-5 backdrop-blur sm:p-6">
           <label className="mb-5 block">
-            <span className="mb-2 block font-mono text-[11px] uppercase tracking-[0.22em] text-muted">
-              Jump to project
-            </span>
-            <div className="relative">
-              <select
-                value={displayedProjectIndex}
-                onPointerDown={beginProjectSelectInteraction}
-                onFocus={beginProjectSelectInteraction}
-                onBlur={endProjectSelectInteraction}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") {
-                    endProjectSelectInteraction();
-                  }
-                }}
-                onChange={(event) => handleProjectSelectChange(Number(event.target.value))}
-                className="h-11 w-full appearance-none rounded-xl border border-border bg-[#080808] px-4 pr-10 text-sm font-medium text-text outline-none transition hover:border-accent focus:border-accent"
-              >
-                {orbitProjects.map((project, index) => (
-                  <option key={project.title} value={index}>
-                    {project.title}
-                  </option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-accent">
-                v
-              </span>
-            </div>
+            <span className="mb-2 block font-mono text-[11px] uppercase tracking-[0.22em] text-muted">Jump to project</span>
+            <select value={selectedProject.title}
+              onChange={(e) => {
+                const project = filtered.find((p) => p.title === e.target.value);
+                if (!project) return;
+                const index = filtered.indexOf(project);
+                if (Math.floor(index / PAGE_SIZE) !== page) {
+                  const nextPage = Math.floor(index / PAGE_SIZE);
+                  setPage(nextPage);
+                  rotationRef.current = 0;
+                  setRotation(0);
+                }
+                setSelectedTitle(project.title);
+              }}
+              className="h-11 w-full rounded-xl border border-border bg-[#080808] px-3 text-sm text-text outline-none transition hover:border-accent focus:border-accent">
+              {filtered.map((project, index) => (
+                <option key={project.title} value={project.title}>
+                  {String(index + 1).padStart(2, "0")} · {project.title}
+                </option>
+              ))}
+            </select>
           </label>
-
           <div className="mb-4 flex items-center justify-between gap-3">
-            <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 font-mono text-xs text-accent">
-              {activeProject.category}
-            </span>
-            {activeProject.featured ? <span className="font-mono text-xs text-muted">featured</span> : null}
+            <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 font-mono text-xs text-accent">{selectedProject.category}</span>
+            {selectedProject.featured && <span className="font-mono text-xs text-muted">featured</span>}
           </div>
-          <h3 className="text-2xl font-semibold leading-tight text-text">{activeProject.title}</h3>
-          <p className="mt-4 text-sm leading-7 text-muted">{activeProject.description}</p>
-          <p className="mt-4 border-l border-accent/40 pl-3 text-sm leading-6 text-muted">{activeProject.details[0]}</p>
-          <div className="mt-5">
-            <TechTags tech={activeProject.tech} />
+          <h3 className="text-2xl font-semibold leading-tight text-text">{selectedProject.title}</h3>
+          <p className="mt-4 text-sm leading-7 text-muted">{selectedProject.description}</p>
+          <p className="mt-4 border-l border-accent/40 pl-3 text-sm leading-6 text-muted">{selectedProject.details[0]}</p>
+          <div className="mt-5 flex flex-wrap gap-1.5">
+            {selectedProject.tech.slice(0, 5).map((tag) => (
+              <span key={tag} className="rounded-full border border-border bg-[#0b0b0b] px-2 py-0.5 text-[11px] text-muted">{tag}</span>
+            ))}
           </div>
-          <ProjectActions project={activeProject} />
+          <ProjectActions project={selectedProject} />
+          <p className="mt-auto pt-8 font-mono text-[11px] text-muted">Select a numbered dot or jump directly to a project.</p>
         </article>
       </div>
     </section>
   );
 }
-
